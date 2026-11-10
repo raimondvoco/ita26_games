@@ -18,6 +18,7 @@ const ND = {   // every NPC has its own unique look
   dex: { n: 'Dex', sk: '#e0a878', hr: '#f4d86a', st: 'messy', top: '#2ab8a8', bt: '#f08a3a', a: ['shades'], shoe: '#e8d8a8' },
   chips: { n: 'Mr. Chips', sk: '#e8c8a8', hr: '#111111', st: 'slick', top: '#1a1a22', tr: '#ff3ca0', bt: '#111111', a: ['bowtie', 'shades', 'gold'] },
   nova: { n: 'Nurse Nova', sk: '#f2d2b6', hr: '#34466a', st: 'bun', top: '#f4f6fa', tr: '#d03a4a', bt: '#c8d0e0', a: ['nursecap', 'mask', 'apron'] },
+  ren: { n: 'Ren' }, kix: { n: 'Kix' }, doc: { n: 'Street Doc' }, tick: { n: 'Tick' }, wire: { n: 'Wire' }, mei: { n: 'Mei' },
   biscuit: { n: 'Old Biscuit', animal: 1 }, mochi: { n: 'Mochi', animal: 1 }, hoot: { n: 'Professor Hoot', animal: 1 }, shell: { n: 'Old Shell', animal: 1 }   // shack animals (sprites + portraits made by tools/make_art.py)
 };
 const LK = {}; [...CH, ...Object.values(ND)].forEach(c => LK[c.n] = c);
@@ -25,7 +26,7 @@ const LK = {}; [...CH, ...Object.values(ND)].forEach(c => LK[c.n] = c);
 const EN = {
   sprout: { n: 'Sprout', hp: 22, atk: 4, xp: 7, spr: 'sprout' }, shadow: { n: 'Shadow', hp: 38, atk: 7, xp: 13, spr: 'shadow' }, crab: { n: 'Crab', hp: 52, atk: 9, xp: 17, spr: 'crab' },
   glitch: { n: 'Glitch', hp: 70, atk: 12, xp: 22, spr: 'glitch' }, frostling: { n: 'Frostling', hp: 34, atk: 6, xp: 11, spr: 'frostling' }, jelly: { n: 'Moon Jelly', hp: 44, atk: 8, xp: 14, spr: 'jelly' },
-  house: { n: 'The House', hp: 190, atk: 15, xp: 0, spr: 'house' }, umbra: { n: 'The Shadow', hp: 120, atk: 11, xp: 40, spr: 'umbra' }
+  house: { n: 'The House', hp: 190, atk: 15, xp: 0, spr: 'house' }
 };
 const LET = { F: 'forest', D: 'dark', B: 'beach', C: 'city', S: 'snow', L: 'lake', H: 'hub' };
 const STAGE = { forest: 0, dark: 1, beach: 2, city: 3 };   // story progress; also drives how angry everyone gets
@@ -58,7 +59,9 @@ const ITEMDEF = {
   coin: { n: 'Lucky Coin', t: 'charm', luck: 4, d: 'Heads, you win. Tails, you also win. There is no tails.' },
   watch: { n: 'Stopped Watch', t: 'charm', def: 2, luck: 1, d: 'It stopped at 6:00 PM. Dinner time. Medication time.' },
   cassette: { n: 'Labeled Cassette', t: 'key', d: 'Handwritten: "PLAY ME. DO NOT TELL THE NURSES." Needs a TV.' },
-  wristband: { n: 'Hospital Wristband', t: 'key', d: 'It reads HITORI - ROOM 4. The date is smudged out.' },
+  wristband: { n: 'Paper Strip', t: 'key', d: 'Two torn halves, pressed together. A name in blue ink and a number.' },
+  scrap: { n: 'Muddy Scrap', t: 'key', d: 'Half a strip of paper. Only "...OM 4" is legible.' },
+  clip: { n: 'Hair Clip', t: 'key', d: 'Caroline\'s favourite. Shiny enough to bribe a crow.' },
   polaroid: { n: 'Blurred Polaroid', t: 'key', d: 'Five people on a couch. One of them has been scribbled over.' },
   lantern: { n: 'Dim Lantern', t: 'key', d: 'Gives off more shadow than light. Morrow wants it back.' }
 };
@@ -67,7 +70,7 @@ const SQ = [
   { id: 'marbles', giver: 'pip', r: 'F', name: 'Pip\'s Marbles', desc: 'Find 3 glass marbles in the Sprout Meadow.', kind: 'fetch', n: 3, what: 'Marble', zone: 'F.mob1', reward: { item: 'bat', xp: 12 }, done: 'You got them ALL?! You\'re cooler than the mayor!', lore: 'Pip says the meadow was bigger yesterday.' },
   { id: 'muffins', giver: 'bella', r: 'F', name: 'Muffin Menace', desc: 'Squash 4 Sprouts that stole the muffins.', kind: 'kill', n: 4, enemy: 'sprout', reward: { item: 'hoodie', xp: 15 }, done: 'Crumbs everywhere, but justice is served.' },
   { id: 'boots', giver: 'finn', r: 'F', name: 'Fishing for Boots', desc: 'Find 2 old boots near the Mushroom Grove.', kind: 'fetch', n: 2, what: 'Old Boot', zone: 'F.item', reward: { item: 'boots', xp: 12 }, done: 'Finally, a catch. Take the good pair.' },
-  { id: 'oil', giver: 'morrow', r: 'D', name: 'Lamp Oil', desc: 'Collect 3 vials of lamp oil in the Hollow Woods.', kind: 'fetch', n: 3, what: 'Lamp Oil', zone: 'D.mob1', reward: { item: 'lantern', xp: 25 }, done: 'The dark thins when you carry it.', lore: 'Morrow says the Shadow only chases people who run.' },
+  { id: 'oil', giver: 'morrow', r: 'D', name: 'Lamp Oil', desc: 'Collect 3 vials of lamp oil in the Hollow Woods.', kind: 'fetch', n: 3, what: 'Lamp Oil', zone: 'D.mob1', reward: { item: 'lantern', xp: 25 }, done: 'The dark thins when you carry it.', lore: 'Morrow says the dark is only loud if you are.' },
   { id: 'vesper', giver: 'vesper', r: 'D', name: 'A Name on the Tip', desc: 'Find 2 locket shards in the Gloom Marsh.', kind: 'fetch', n: 2, what: 'Locket Shard', zone: 'D.mob2', reward: { item: 'locket', xp: 25 }, done: 'His name was... no. It slipped again. Thank you.', lore: 'Lady Vesper keeps forgetting who she is waiting for.' },
   { id: 'knight', giver: 'rattles', r: 'D', name: 'Knight\'s Duty', desc: 'Defeat 5 Shadows.', kind: 'kill', n: 5, enemy: 'shadow', reward: { item: 'umbrella', xp: 30 }, done: 'You fight like a king with no crown. Take this.' },
   { id: 'crabs', giver: 'lou', r: 'B', name: 'Crab Patrol', desc: 'Shoo 5 Crabs off the beach.', kind: 'kill', n: 5, enemy: 'crab', reward: { item: 'vest', xp: 30 }, done: 'Beach secured! Go wild. Not too wild.' },
@@ -76,21 +79,15 @@ const SQ = [
   { id: 'charts', giver: 'nova', r: 'L', name: 'Lost Charts', desc: 'Find 3 clipboard pages around Clinic Island.', kind: 'fetch', n: 3, what: 'Chart Page', zone: 'L.item', reward: { item: 'wrench', xp: 35 }, done: 'Thank you. Please do not read them. ...You already did.', lore: 'The clinic charts list five patients and only four beds.' }
 ];
 // ---- lore notes (found with easter eggs); shown in the journal
-const LORE = {
-  wristband: 'A hospital wristband in the grass: HITORI - ROOM 4. Why would grass need a wristband?',
-  pond: 'Your reflection in the pond kept smiling after you stopped.',
-  doll: 'A little straw doll hangs from a branch. Its face is stitched shut, and so is its pocket.',
-  bottle: 'Message in a bottle: "if you can read this, you are not the one who is dreaming."',
-  phone: 'The payphone rang. A calm voice: "Please take your medication. Dinner is at six."',
-  chart: 'Nurse Nova\'s chart: FIVE PATIENTS, FOUR BEDS. One name is blacked out. U-K-U.',
-  tape: 'THE TAPE: This world is a calming simulation built for patients with mental illness. The friends, the quests, the monsters: all designed to keep you calm.',
-  polaroid: 'A polaroid from the castle: five people on a couch. The one on the end is scribbled out.'
+const LORE = {   // deliberately small and strange: nothing here ever explains itself
+  clocks: 'Every clock in these woods says six o\'clock.', photo: 'A photograph with an empty space left at one end.', bands: 'A drawer of identical white bands, rolled up and waiting.', sand: 'Smooth sand. Nobody has been here, and somebody just left.',
+  tag: 'A paper strip, two halves. A name in your own handwriting, and a room number.', phone: 'A payphone rang. The voice only said: "Dinner is at six."', mirror: 'Your reflection arrived a moment late.', chart: 'Five names on a list. Four beds.', door: 'A door with no handle on the inside.', below: 'The telescope in the observatory pointed down, at a place where three people were sitting very close together.'
 };
 const PAL = {   // soft OMORI-like palettes: flat mint ground, teal trees with dark outlines, pale pink dirt
   forest: { a: ['#a8dcb0', '#9fd4a8', '#b2e2b8'], sp: '#86c294', tall: '#7cbf8e', tuft: '#e4f6e4', tuft2: '#6aa77c', path: '#ecdcb8', path2: '#d8c49a', pe: '#a88e64', lawn: '#bce8c0', plaza: '#dad4c6', pl2: '#c0b9a8', fl: ['#ffffff', '#bcd8ff', '#ffc8dc', '#ffe9a0'], pink: '#f4dcee', pink2: '#e2c0d8', tm: '#3fb79c', tl: '#92e6c8', td: '#2a8c7a', to: '#1c5c58', tr: '#7a5240', wt: '#80cae8', wt2: '#b0e4f6', wo: '#3e8aa8' },
   dark: { a: ['#4a4468', '#454060', '#504a6e'], sp: '#38324f', tall: '#3c3658', tuft: '#7a72a4', tuft2: '#2c2744', path: '#6c648a', path2: '#58507a', pe: '#2a2440', lawn: '#554e74', plaza: '#6c648a', pl2: '#58507a', fl: ['#88ffff', '#c890ff', '#88ffaa', '#ffa0cc'], pink: '#5a4a70', pink2: '#4a3c60', tm: '#6a5aa4', tl: '#a090d8', td: '#463a7a', to: '#221a3a', tr: '#2a1c3a', wt: '#3a5a98', wt2: '#6a8ac8', wo: '#1e2e5a' },
   beach: { a: ['#f4e2ac', '#ecdca2', '#f8eaba'], sp: '#d8c488', tall: '#e2ce92', tuft: '#a8d080', tuft2: '#c2ae72', path: '#e8ca98', path2: '#d6b67e', pe: '#b09462', lawn: '#f8eec6', plaza: '#f2ede2', pl2: '#dad2be', fl: ['#ffb0c8', '#ffffff', '#ffe08a', '#9fd4ff'], pink: '#f6d8c4', pink2: '#e8c2aa', tm: '#3ab472', tl: '#92e2a4', td: '#28865a', to: '#185840', tr: '#9a7444', wt: '#5ab6e2', wt2: '#9ad8f4', wo: '#2a78a8' },
-  city: { a: ['#26263c', '#222236', '#2b2b44'], sp: '#1a1a2a', tall: '#1d1d2e', tuft: '#34344e', path: '#3c3c5a', path2: '#2e2e48', pe: '#15151f', lawn: '#2c2c46', plaza: '#3a3a58', pl2: '#2e2e48', fl: ['#ff3ca0', '#3ee0ff', '#ffd23c', '#8cff5a'], pink: '#2e2e48', pink2: '#222238', tm: '#444458', tl: '#666680', td: '#2a2a3a', to: '#0e0e18', tr: '#333344', wt: '#1a2a4a', wt2: '#3a4a7a', wo: '#0a1020' },
+  city: { a: ['#22223a', '#1e1e34', '#262640'], sp: '#14142a', tall: '#1d1d2e', tuft: '#34344e', path: '#34344e', path2: '#2a2a44', pe: '#15151f', lawn: '#2c2c46', plaza: '#2a2a46', pl2: '#262642', fl: ['#ff3ca0', '#3ee0ff', '#ffd23c', '#8cff5a'], pink: '#2e2e48', pink2: '#222238', tm: '#444458', tl: '#666680', td: '#2a2a3a', to: '#0e0e18', tr: '#333344', wt: '#1a2a4a', wt2: '#3a4a7a', wo: '#0a1020' },
   castle: { a: ['#3a3450', '#363049', '#3e3856'], sp: '#2a2440', tall: '#3a3450', tuft: '#4a4468', path: '#7a2630', path2: '#5a1c26', pe: '#3a0f16', lawn: '#3a3450', plaza: '#47405a', pl2: '#383248', fl: [], pink: '#3a3450', pink2: '#2a2440', tm: '#5a5470', tl: '#8a84a0', td: '#3a3450', to: '#1a1626', tr: '#2a1c3a', wt: '#243a66', wt2: '#4a5a96', wo: '#101830' },
   casino: { a: ['#431230', '#3c102b', '#4a1636'], sp: '#2c0a20', tall: '#431230', tuft: '#5a1a40', path: '#8a1a4a', path2: '#a82a60', pe: '#4a0a24', lawn: '#431230', plaza: '#47405a', pl2: '#383248', fl: [], pink: '#431230', pink2: '#2c0a20', tm: '#701850', tl: '#ff3ca0', td: '#3c102b', to: '#1a0a1a', tr: '#2a1c3a', wt: '#243a66', wt2: '#4a5a96', wo: '#101830' }
 };
@@ -109,3 +106,4 @@ Object.assign(EN, {
 const VARIANT = { sprout: 'bloomling', shadow: 'wraith', crab: 'hermit', glitch: 'static', jelly: 'glowjelly' };
 const SQKIND = { marbles: 'marble', boots: 'boot', oil: 'oil', vesper: 'shard', cones: 'cone', wax: 'wax', charts: 'page' }, QKIND = { forest: 'mushroom', dark: 'key', beach: 'shell', city: 'token' };
 PAL.shack = { a: ['#9a7448', '#926c42', '#a07c50'], sp: '#7a5834', tall: '#9a7448', tuft: '#b08a5c', tuft2: '#7a5834', path: '#b8505a', path2: '#9a3c46', pe: '#6a2a32', lawn: '#9a7448', plaza: '#9a7448', pl2: '#8a6640', fl: [], pink: '#9a7448', pink2: '#7a5834', tm: '#6a4a2e', tl: '#8a6a44', td: '#4a321c', to: '#2a1a0e', tr: '#4a321c', wt: '#243a66', wt2: '#4a5a96', wo: '#101830' };
+Object.assign(EN, { knight: { n: 'Hollow Knight', hp: 48, atk: 9, xp: 17, spr: 'knight' }, squire: { n: 'Squire', hp: 30, atk: 6, xp: 11, spr: 'squire' }, warden: { n: 'The Warden', hp: 120, atk: 12, xp: 45, spr: 'warden' } });

@@ -6,6 +6,7 @@
   <title>Synchronicity</title>
   <style>
     @font-face { font-family: "Synchronicity Hand"; src: url("assets/fonts/OMORI_GAME2.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: block; }
+    @font-face { font-family: "Synchronicity Crazy"; src: url("assets/fonts/OMORI_GAME.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: block; }
     :root { --bg: #07060d; }
     html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
     body { display: flex; align-items: center; justify-content: center; }
@@ -14,17 +15,56 @@
 </head>
 <body>
   <canvas id="c"></canvas>
-  <!-- Synchronicity v4. Load order matters: later files use things defined by earlier ones. -->
-  <script src="assets/world.js"></script>   <!-- island layout generated from your map (tools/make_world.py) -->
-  <script src="js/core.js"></script>        <!-- canvas, input, helpers, music + sound effects -->
-  <script src="js/data.js"></script>        <!-- characters, enemies, biomes, items, side quests, lore -->
-  <script src="js/sprites.js"></script>     <!-- sprite sheets, portraits, enemy + item art -->
-  <script src="js/maps.js"></script>        <!-- big overworld generator + castle/casino interiors -->
-  <script src="js/world.js"></script>       <!-- state, stats, spawning, movement, rendering -->
-  <script src="js/story.js"></script>       <!-- dialogue (+ rising anger), NPCs, side quests, events, easter eggs -->
-  <script src="js/battle.js"></script>      <!-- OMORI-style combat -->
-  <script src="js/scenes.js"></script>      <!-- horror scenes, the Shadow, jumpscares -->
-  <script src="js/menus.js"></script>       <!-- title, options, saves, X menu, journal, guide, polaroid -->
-  <script src="js/main.js"></script>        <!-- game loop + start -->
+  <!-- Synchronicity v5: connected screen-sized areas, five days, four fears. Load order matters. -->
+  <script src="js/core.js"></script>       <!-- canvas, input, helpers, music + sound effects -->
+  <script src="js/data.js"></script>       <!-- characters, enemies, items, lore, palettes -->
+  <script src="js/sprites.js"></script>    <!-- sprite sheets, portraits, enemy + item art -->
+  <script src="js/mapgen.js"></script>     <!-- area builder + renderer (tree masses, ledges, water, decor) -->
+  <script src="js/props.js"></script>      <!-- static scenery props + building facades -->
+  <script src="js/areas.js"></script>      <!-- helpers + DAY 1: Whispering Woods -->
+  <script src="js/areas2.js"></script>     <!-- DAY 2 Gloomwood + DAY 3 Sunny Shores -->
+  <script src="js/areas_city.js"></script> <!-- DAY 4 Neon District + casino -->
+  <script src="js/areas3.js"></script>     <!-- DAY 5 Above -->
+  <script src="js/castle.js"></script>     <!-- Castle Mortis: maroon brick, braziers, runes, knights -->
+  <script src="js/interiors.js"></script>  <!-- interior furniture library -->
+  <script src="js/rooms.js"></script>      <!-- dense multi-room interiors (grid layouts) -->
+  <script src="js/entities.js"></script>   <!-- props, pickups, object drawing -->
+  <script src="js/world.js"></script>      <!-- state, transitions, update, drawing -->
+  <script src="js/story.js"></script>      <!-- dialogue, quests, days, fear events -->
+  <script src="js/npcs.js"></script>       <!-- NPC dialogue, friend requests, quest events -->
+  <script src="js/city.js"></script>       <!-- city tileset art, casino, prize counter, choices, city quests -->
+  <script src="js/minigames.js"></script>  <!-- darkness, spiders, deep water, heights -->
+  <script src="js/slots.js"></script>      <!-- casino slot machines -->
+  <script src="js/econ.js"></script>       <!-- money, consumables, shops, chips -->
+  <script src="js/battle.js"></script>     <!-- OMORI-style combat -->
+  <script src="js/menus.js"></script>      <!-- title, saves, X menu, journal, guide, map -->
+  <script src="js/v10.js"></script>        <!-- v10: patrols, puzzles, rides, fishing, cats, save journals, shop screen -->
+  <script src="js/v12_catpx.js"></script>
+  <script src="js/v12.js"></script>       <!-- v12: playground rides, cats, neon city + casino dressing -->
+  <script src="js/v12_casino.js"></script>  <!-- v12: the casino as one grand hall -->
+  <script src="js/v12_city2.js"></script>   <!-- v12: ramen kiosks, street furniture, the House office -->
+  <script src="js/v12_meme.js"></script>
+  <script src="js/v12_games.js"></script>   <!-- v12: playable arcade cabinets, tickets, prize counter -->
+  <script src="js/v12_house.js"></script>   <!-- v13: Mr. House and the washroom -->
+  <script src="js/v14.js"></script>         <!-- v14: new music, Uku at home at dusk, battle screen -->
+  <script src="js/v20.js"></script>         <!-- v20: casino gamblers, the staff back room, the old computer -->
+  <script src="js/v21.js"></script>         <!-- v21: the Old Pier rebuilt from the dock tileset, sea sounds -->
+  <script src="js/v23.js"></script>         <!-- v23: the fears as places: the well, the web, the tide -->
+  <script src="js/v28.js"></script>         <!-- v28: battle animations, tougher numbers; cat, sand and slot-lever sounds -->
+  <script src="js/v29.js"></script>         <!-- v29: hand-drawn world map that fills in as you explore; hand-drawn emotions guide -->
+  <script src="js/v30.js"></script>         <!-- v30: "now playing" popup with the song name and artist -->
+  <!-- PART TWO: first-person, PS1-style 3D -->
+  <script src="js/p2_engine.js"></script>   <!-- the little WebGL engine, walking, subtitles, sounds -->
+  <script src="js/p2_layout.js"></script> <!-- the house's floor plan -->
+  <script src="js/p2_models.js"></script>   <!-- furniture and things, modelled -->
+  <script src="js/p2_photos.js"></script> <!-- the photographs and the poster -->
+  <script src="js/p2_house.js"></script>    <!-- the two-storey house -->
+  <script src="js/p2_hitori_data.js"></script>
+  <script src="js/p2_hikari_data.js"></script> <!-- the 3D Hikari model --> <!-- the 3D Hitori model (mesh, skin weights, texture) -->
+  <script src="js/p2_body.js"></script>     <!-- Hitori's 3D model, her hands and legs in first person, mirrors -->
+  <script src="js/p2_pc.js"></script>       <!-- Hitori's computer -->
+  <script src="js/p2_dealer.js"></script>   <!-- the dream: blackjack -->
+  <script src="js/p2_story.js"></script>    <!-- day 1, the dream, day 2, the sister -->
+  <script src="js/main.js"></script>       <!-- game loop -->
 </body>
 </html>

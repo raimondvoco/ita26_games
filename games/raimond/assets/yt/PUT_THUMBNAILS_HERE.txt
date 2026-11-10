@@ -1,0 +1,10 @@
+Put six YouTube thumbnails here as 1.jpg, 2.jpg, 3.jpg, 4.jpg, 5.jpg and 6.jpg.
+They go with the videos in this order (see VIDS in js/p2_pc.js):
+ 1  rain on a window at night (10 hours, no ads)
+ 2  what it feels like to wake up after a very long sleep
+ 3  footsteps recorded in my empty house [NOT CLICKBAIT]
+ 4  lofi for when everyone has left
+ 5  sisters reunited after 3 years (emotional)
+ 6  how to tell if you are dreaming
+The game shrinks them to 48 x 27 pixels and blows them back up, so they look low-res.
+A thumbnail's image address is https://i.ytimg.com/vi/<video id>/hqdefault.jpg

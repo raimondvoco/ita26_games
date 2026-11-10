@@ -109,8 +109,34 @@ NPC = {
  'lou':    dict(skin='#c8946a', hair='#2a1a12', style='spiky', top='#e0564a', trim='#fff', pants='#e0564a', shoe='#f0f0f0', acc=['visor', 'whistle'], bg='#d8b08a'),
  'coco':   dict(skin='#f4d2b4', hair='#f08fb8', style='bun', top='#8ad4f4', trim='#fff', pants='#fff', shoe='#f4b8d0', acc=['apron'], bg='#f0c8d8'),
  'dex':    dict(skin='#e0a878', hair='#f2d46a', style='messy', top='#2ab8a8', trim='#fff', pants='#f08a3a', shoe='#e8d8a8', acc=['shades'], bg='#a0d8d0'),
+ 'ren':    dict(skin='#f0c8a0', hair='#2a2a30', style='none', top='#f4f0e8', trim='#d03a4a', pants='#2a3a5a', shoe='#3a2a22', acc=['apron', 'cap'], bg='#e8c8a0'),
+ 'kix':    dict(skin='#d8a070', hair='#ff4a8a', style='messy', top='#2a2a44', trim='#3ee0ff', pants='#1a1a28', shoe='#f4f4f4', acc=['pack'], bg='#6a5a9a'),
+ 'doc':    dict(skin='#e8d0b8', hair='#8a8a98', style='slick', top='#d8e4ec', trim='#5ab0a0', pants='#4a5a6a', shoe='#2a2a30', acc=['mask', 'shades'], bg='#8ab8b0'),
+ 'tick':   dict(skin='#d8b890', hair='#9a9aa0', style='bald', top='#4a3a2a', trim='#e8c030', pants='#2a2018', shoe='#1a1410', acc=['tophat', 'beard'], bg='#a89878'),
+ 'wire':   dict(skin='#e8c8b0', hair='#3ee0ff', style='spiky', top='#3a1a4a', trim='#ff3ca0', pants='#14102a', shoe='#14102a', acc=['visor', 'shades'], bg='#5a3a7a'),
+ 'mei':    dict(skin='#f2d0b0', hair='#c03a5a', style='bun', top='#e8a030', trim='#fff', pants='#7a2a3a', shoe='#3a2218', acc=['apron'], bg='#e8b8a0'),
  'nova':   dict(skin='#f2d2b6', hair='#34466a', style='bun', top='#f4f6fa', trim='#d03a4a', pants='#c8d0e0', shoe='#e8ecf4', acc=['nursecap', 'mask', 'apron'], bg='#a8c4d8'),
+ 'gus':    dict(skin='#e0b48c', hair='#6a4a2a', style='messy', top='#2a6a4a', trim='#e8c030', pants='#3a2a22', shoe='#1a1410', acc=['visor', 'beard'], bg='#7a8a5a'),
+ 'pearl':  dict(skin='#f4d8c0', hair='#ff8fb8', style='bun', top='#8a1a4a', trim='#e8c060', pants='#5a0a2a', shoe='#2a0a14', acc=['bowtie'], bg='#c87aa0'),
+ 'mina':   dict(skin='#f2d0b0', hair='#3a2a5a', style='long', top='#ffb0d0', trim='#fff', pants='#6a5aa0', shoe='#f4f4f4', acc=['pack'], kid=True, bg='#b8a0d8'),
+ 'vic':    dict(skin='#c89070', hair='#e8e8f0', style='slick', top='#1a1440', trim='#2ee6e6', pants='#0a0a20', shoe='#0a0a14', acc=['bowtie', 'mustache'], bg='#3a4a8a'),
+ 'hana':   dict(skin='#f0c8a8', hair='#2ee6e6', style='messy', top='#ff5a8a', trim='#fff', pants='#24124a', shoe='#e8e8f0', acc=['cap', 'pack'], bg='#5a3a8a'),
+ 'sal':    dict(skin='#d8a888', hair='#2a2a2a', style='none', top='#5a5a6a', trim='#e8c030', pants='#2a2a3a', shoe='#1a1a20', acc=['cap', 'beard'], bg='#6a6a80'),
+ 'dot':    dict(skin='#f2d2b6', hair='#a83a6a', style='bun', top='#3a2a5a', trim='#ff5a8a', pants='#1a1430', shoe='#ff5a8a', acc=['shades'], bg='#7a4a7a'),
+ 'rex':    dict(skin='#e8c0a0', hair='#c8a040', style='spiky', top='#7a1a2a', trim='#e8c060', pants='#2a0a14', shoe='#14080a', acc=['gold', 'shades'], bg='#8a3a4a'),
+ 'fay':    dict(skin='#f0d0c0', hair='#e8e8f0', style='long', top='#4a2a7a', trim='#e8c060', pants='#4a2a7a', shoe='#e8c060', acc=['dress', 'gold'], bg='#6a5a9a'),
  'chips':  dict(skin='#e8cca8', hair='#14141a', style='slick', top='#1c1c26', trim='#ff3ca0', pants='#14141a', shoe='#0e0e14', acc=['bowtie', 'shades', 'gold'], bg='#6a4a68'),
+ 'dolly':  dict(skin='#f0d0b8', hair='#b07ad8', style='bun', top='#c84a7a', trim='#ffd23c', pants='#5a2a4a', shoe='#2a1420', acc=['gold'], bg='#a86a8a'),
+ 'penny':  dict(skin='#d8a888', hair='#5a5a62', style='bald', top='#3a4a6a', trim='#e8c060', pants='#2a2a3a', shoe='#14141a', acc=['visor', 'mustache'], bg='#5a6a8a'),
+ 'mags':   dict(skin='#e8c0a0', hair='#e85a3a', style='long', top='#1a6a5a', trim='#ffd23c', pants='#123a34', shoe='#0e1a18', acc=['shades', 'gold'], bg='#3a7a6a'),
+ 'oz':     dict(skin='#c8946a', hair='#1a1a20', style='slick', top='#6a3a1a', trim='#e8c060', pants='#2a1a10', shoe='#0e0a06', acc=['beard', 'gold'], bg='#7a5a3a'),
+ 'tobi':   dict(skin='#f2d2b6', hair='#3ee0ff', style='spiky', top='#2a2a44', trim='#ff3ca0', pants='#14102a', shoe='#f4f4f4', acc=['pack'], bg='#4a4a7a'),
+ 'june':   dict(skin='#f4d8c0', hair='#f2d46a', style='long', top='#e8e4f0', trim='#c84a7a', pants='#8a7aa8', shoe='#e8e4f0', acc=['dress'], bg='#c8b8d8'),
+ 'ace':    dict(skin='#e0b48c', hair='#2a1a12', style='messy', top='#7a1a2a', trim='#f4f4f4', pants='#1a0a10', shoe='#0e0608', acc=['shades'], bg='#8a3a4a'),
+ 'velma':  dict(skin='#f0c8a8', hair='#14141a', style='bun', top='#14141a', trim='#ff3ca0', pants='#14141a', shoe='#ff3ca0', acc=['dress', 'gold'], bg='#5a3a5a'),
+ 'sid':    dict(skin='#e8c8a8', hair='#9a9aa0', style='none', top='#4a6a3a', trim='#e8c060', pants='#2a3a22', shoe='#1a1410', acc=['cap', 'beard'], bg='#6a7a5a'),
+ 'bo':     dict(skin='#d8a070', hair='#14141a', style='slick', top='#f4f0e8', trim='#c81830', pants='#14141a', shoe='#0e0e14', acc=['bowtie', 'mustache'], bg='#3a2a3a'),
+ 'lulu':   dict(skin='#f4d8c0', hair='#14141a', style='slick', top='#f4f0e8', trim='#c81830', pants='#14141a', shoe='#0e0e14', acc=['bowtie'], bg='#3a2a3a'),
 }
 DIRS = ['down', 'left', 'right', 'up']
 
@@ -322,10 +348,13 @@ def portrait(id_, emo):
 
 if __name__ == '__main__':
     os.makedirs(SPR, exist_ok=True); os.makedirs(POR, exist_ok=True)
-    for hero in ('caroline', 'hitori', 'steven', 'uku'):
+    for hero in (() if len(__import__('sys').argv) > 1 else ('caroline', 'hitori', 'steven', 'uku')):
         for d in DIRS:
             idle = clean_hero(hero, d); walk_sheet(idle, d).save(os.path.join(SPR, f'{hero}_{d}.png'))
+    import sys
+    only = sys.argv[1:]
     for id_ in NPC:
+        if only and id_ not in only: continue
         for d in DIRS: npc_sheet(id_, d).save(os.path.join(SPR, f'npc_{id_}_{d}.png'))
         for emo in ('neutral', 'happy', 'sad', 'angry', 'shock', 'worried', 'blush', 'dark'): portrait(id_, emo).save(os.path.join(POR, f'npc_{id_}_{emo}.png'))
     print('done')
