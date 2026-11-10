@@ -57,12 +57,14 @@ function sh(h, f) {   // lighten/darken a #rrggbb colour
   return '#' + [16, 8, 0].map(i => c(i).toString(16).padStart(2, '0')).join('');
 }
 const FONT = '"Synchronicity Hand", "Comic Neue", cursive';
+const CRAZYF = '"Synchronicity Crazy", ' + FONT;   // the shaky font, for the lines where Hitori is coming apart
+let TXTF = null;   // when set, txt() and tw() use this font instead
 function txt(s, x, y, c = '#fff', al = 'left', sz = 8) {   // UI-layer text: rendered at native resolution, never scaled
   X.save(); X.setTransform(1, 0, 0, 1, 0, 0);
-  X.font = Math.round(sz * U) + 'px ' + FONT; X.textAlign = al; X.textBaseline = 'top'; X.fillStyle = c;
+  X.font = Math.round(sz * U) + 'px ' + (TXTF || FONT); X.textAlign = al; X.textBaseline = 'top'; X.fillStyle = c;
   X.fillText(s, Math.round(x * U), Math.round(y * U)); X.restore();
 }
-const tw = (s, sz = 8) => { X.save(); X.setTransform(1, 0, 0, 1, 0, 0); X.font = Math.round(sz * U) + 'px ' + FONT; const w = X.measureText(s).width / U; X.restore(); return w };
+const tw = (s, sz = 8) => { X.save(); X.setTransform(1, 0, 0, 1, 0, 0); X.font = Math.round(sz * U) + 'px ' + (TXTF || FONT); const w = X.measureText(s).width / U; X.restore(); return w };
 function wrap(s, n) { const o = []; let l = ''; for (const w of s.split(' ')) { if ((l + w).length > n) { o.push(l); l = '' } l += w + ' ' } o.push(l); return o }
 const rng = s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
 const hsh = (x, y, k = 0) => ((x * 73856093 ^ y * 19349663 ^ k * 83492791) >>> 0) % 1000 / 1000;

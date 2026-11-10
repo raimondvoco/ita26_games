@@ -3,22 +3,33 @@ const ADV = { happy: 'sad', sad: 'angry', angry: 'happy' };   // each emotion be
 const emoMult = (a, d) => ADV[a] == d ? 1.3 : ADV[d] == a ? .75 : 1;
 const EMOC = { happy: '#ffd84a', sad: '#6aa0ff', angry: '#ff5a4a', neutral: '#cfcfd8' };
 const SLOTS = [[30, 74], [30, 140], [290, 74], [290, 140]];   // feet positions of the four corners
-function scaleEnemy(t) {   // fights get harder with story progress and with every battle won
-  const b = EN[t], k = 1 + .28 * stageIdx() + Math.min(1.1, S.battles * .035);
-  return { hp: Math.round(b.hp * k), atk: Math.round(b.atk * k), xp: Math.round(b.xp * (1 + .12 * stageIdx())) };
-}
+// Enemy strength is fixed by the biome you meet it in (it never grows with how many fights you've won):
+//   Woods: fair up to about Lv 8 · Gloomwood & Castle: Lv 8-12 · Beach: Lv 12-16 · Neon City: Lv 16-20 · Above: Lv 20-24
+// (v28: tougher. A hit early on does about 10-20 and a woods monster has about 100 HP, so a fight takes a couple of rounds.)
+const TIER = [null, { hp: 100, atk: 8, xp: 30, lv: '1-8' }, { hp: 310, atk: 20, xp: 70, lv: '8-12' }, { hp: 420, atk: 31, xp: 120, lv: '12-16' }, { hp: 520, atk: 42, xp: 190, lv: '16-20' }, { hp: 620, atk: 53, xp: 260, lv: '20-24' }];
+const EF = { sprout: [1, 1], bloomling: [1.3, 1.25], shadow: [1, 1], wraith: [1.25, 1.15], squire: [.85, .95], knight: [1.35, 1.25], warden: [2.4, 1.45], crab: [1, 1], hermit: [1.3, 1.15], jelly: [1.1, 1.05], glowjelly: [1.2, 1.1], glitch: [1, 1], static: [1.2, 1.15], frostling: [1, 1], house: [1.7, 1.2] };
+const tierOf = a => ({ w: 1, g: 2, c: 2, b: 3, n: 4, s: 5 })[(a || 'w')[0]] || 1;
+const partyHpF = () => { const n = S.party.length; return n >= 4 ? 1.15 : n == 3 ? 1 : n == 2 ? .8 : .62 };   // fewer friends, smaller monsters
+function scaleEnemy(t) { const T0 = TIER[tierOf(S.a)], f = EF[t] || [1, 1]; return { hp: Math.round(T0.hp * f[0] * partyHpF()), atk: Math.round(T0.atk * f[1] * (S.party.length == 1 ? .8 : 1)), xp: Math.round(T0.xp * f[0]) } }
 function startBattle(e) {
   const sc2 = scaleEnemy(e.t), alone = !!e.alone;
   if (alone) { S.backup = S.party.slice(); S.party = [PL] }
-  B = { e, t: e.t, hp: sc2.hp, mh: sc2.hp, atk: sc2.atk, xp: sc2.xp, emo: ['happy', 'sad', 'angry'][Math.random() * 3 | 0], order: S.party.filter(i => S.hp[i] > 0), i: -1, sel: 0, mode: 'msg', msg: EN[e.t].n + ' appears!', cb: adv, g: 0, ch: 0, shk: 0, steps: [], alone, hurt: 0, act: -1, fx: [], nums: [], lunge: null, elunge: null };
+  B = { e, t: e.t, hp: sc2.hp, mh: sc2.hp, atk: sc2.atk, xp: sc2.xp, emo: ['happy', 'sad', 'angry'][Math.random() * 3 | 0], order: S.party.filter(i => S.hp[i] > 0), i: -1, sel: 0, mode: 'msg', msg: EN[e.t].n + ' appears!', cb: adv, g: 0, ch: 0, shk: 0, steps: [], alone, hurt: 0, act: -1, fx: [], nums: [], lunge: null, elunge: null, buff: {} };
   if (!B.order.length) { B.order = [PL]; S.hp[PL] = 1 }
   shake = 10; beep(200, .2); sc = 'battle'; B.tm = 50;
+  B.scared = {}; const sc_ = B.order.filter(i => FEARS[i] && FEARS[i].t.includes(e.t)); sc_.forEach(i => B.scared[i] = 3);
+  if (sc_.length) { const first = B.cb; B.cb = () => steps(sc_.map(i => [CH[i].n + ' is scared of ' + FEARS[i].why + '! (ATK down)', null]), first || adv) }
 }
 function steps(list, done) { B.steps = list; B.done = done; showNext() }
 function showNext() { if (!B.steps.length) { const d = B.done; B.done = null; return d && d() } const [text, fn] = B.steps.shift(); fn && fn(); B.mode = 'msg'; B.msg = text; B.tm = 52; B.cb = showNext }
-function adv() { if (B.hp <= 0) return win(); B.i++; if (B.i >= B.order.length) return enemyTurn(); const m = B.order[B.i]; if (S.hp[m] <= 0) return adv(); B.act = m; B.mode = 'menu'; B.sel = 0 }
+function adv() { if (B.hp <= 0) return win(); B.i++; if (B.i >= B.order.length) return enemyTurn(); const m = B.order[B.i]; if (S.hp[m] <= 0) return adv(); B.act = m;
+  if (B.scared && B.scared[m] > 0 && --B.scared[m] == 0) { B.i--; B.scared[m] = -1; return steps([[CH[m].n + ' takes a deep breath. Not scared anymore!', null]], adv) }
+  B.mode = 'menu'; B.sel = 0 }
+// some friends are afraid of certain things: they hit for less until they calm down (3 turns)
+const FEARS = { 0: { t: ['shadow', 'wraith'], why: 'ghosts' }, 1: { t: ['crab', 'hermit', 'jelly', 'glowjelly'], why: 'things that pinch and squish' }, 3: { t: ['glitch', 'static'], why: 'loud broken machines' } };
+const FEARLINE = { 0: 'Steven:scared|N-nope. Ghosts are not real. That is not a real ghost.', 1: 'Caroline:scared|Eek! It\'s all pinchy and wet!', 3: 'Uku:scared|Turn it off, turn it OFF!' };
 const slotOf = i => Math.max(0, B.order.indexOf(i));
-const dmgOf = (m, mult = 1) => { const crit = S.emo[m] == 'happy' && Math.random() < .15 + luckOf(m) * .02, d = Math.max(1, Math.round((atkOf(m) + (Math.random() * 4 | 0)) * emoMult(S.emo[m], B.emo) * (S.emo[m] == 'angry' ? 1.35 : S.emo[m] == 'sad' ? .85 : 1) * mult * (crit ? 1.8 : 1))); return { d, crit } };
+const dmgOf = (m, mult = 1) => { const crit = S.emo[m] == 'happy' && Math.random() < .15 + luckOf(m) * .02, d = Math.max(1, Math.round((atkOf(m) + (Math.random() * 5 | 0)) * 1.6 * emoMult(S.emo[m], B.emo) * (S.emo[m] == 'angry' ? 1.35 : S.emo[m] == 'sad' ? .85 : 1) * mult * (B.scared && B.scared[m] > 0 ? .6 : 1) * (crit ? 1.8 : 1))); return { d, crit } };
 // ---- animation helpers
 function fx(k, o = {}) { B.fx.push({ k, t: 0, ...o }) }
 function num(txt, x, y, c = '#fff') { B.nums.push({ txt, x, y, t: 0, c }) }
@@ -41,8 +52,13 @@ function act(k) {
     if (m == PL) { const a = dmgOf(m, .7), b2 = dmgOf(m, .7); steps([['Hitori cackles: "HYSTERIA!" ' + a.d + ' + ' + b2.d + ' damage!', () => { hitEnemy(a.d, m, 'big'); setTimeout(() => B && hitEnemy(b2.d, m, 'big'), 220); S.hp[m] = Math.max(1, S.hp[m] - 4) }], setEmo(m, 'angry')].filter(Boolean), adv) }
     if (m == 3) steps([['Uku: "chill." The enemy calms down.', () => { B.ch = 3; S.hp[3] = Math.min(maxHp(3), S.hp[3] + 10); fx('wave', {}); fx('heal', { slot: slotOf(3) }) }], setEmo(3, 'neutral')].filter(Boolean), adv);
   }
-  if (k == 2) { if (S.snacks < 1) return steps([['No snacks left!', null]], () => { B.mode = 'menu' }); S.snacks--; steps([[c + ' eats a snack (+25 HP).', () => { S.hp[m] = Math.min(maxHp(m), S.hp[m] + 25); beep(600, .1); fx('heal', { slot: slotOf(m) }); num('+25', SLOTS[slotOf(m)][0], SLOTS[slotOf(m)][1] - 40, '#8f8') }]], adv) }
-  if (k == 3) { if (B.e.boss || B.e.t == 'umbra') return steps([['You can\'t run from this one!', null]], () => { B.mode = 'menu' }); if (Math.random() < .7) steps([['Got away!', null]], () => { B.e.cd = 90; endBattle() }); else steps([['Couldn\'t escape!', null]], adv) }
+  if (k == 2) { if (!bagList().length) return steps([['The bag is empty! Shops sell food and drinks.', null]], () => { B.mode = 'menu' }); B.mode = 'items'; B.isel = 0 }
+  if (k == 3) { if (B.e.boss) return steps([['You can\'t run from this one!', null]], () => { B.mode = 'menu' }); if (Math.random() < .7) steps([['Got away!', null]], () => { B.e.cd = 90; endBattle() }); else steps([['Couldn\'t escape!', null]], adv) }
+}
+function useBattleItem(id, t) {
+  const c = CONS[id], m = B.act, msg = consUse(id, t, true);
+  if (!msg) { B.mode = 'items'; beep(160, .2); return }
+  steps([[CH[m].n + ' uses ' + c.n + '! ' + msg, () => { beep(700, .15); const ts = c.all ? B.order.filter(j => S.hp[j] > 0) : c.buff ? B.order : [t]; ts.forEach(j => { fx(c.buff ? 'shield' : 'heal', { slot: slotOf(j) }); if (!c.buff) num(c.revive ? 'UP!' : '+', SLOTS[slotOf(j)][0], SLOTS[slotOf(j)][1] - 40, '#8f8') }) }]], adv);
 }
 function enemyTurn() {
   const al = B.order.filter(i => S.hp[i] > 0); if (!al.length) return lose();
@@ -59,19 +75,21 @@ function endBattle() { if (S.backup) { S.party = S.backup; S.backup = null } sc 
 function win() {
   const t = B.t, x = B.xp; S.xp += x; S.battles++; let m = 'Victory! +' + x + ' XP.';
   while (S.xp >= S.lv * 20) { S.xp -= S.lv * 20; S.lv++; S.party.forEach(i => S.hp[i] = maxHp(i)); m += ' LEVEL UP! Lv' + S.lv }
-  const b = S.b, base = EN[t].base || t; if (base == BI[b].en) S.p[b][0]++;   // main-quest kill counter
-  SQ.forEach(s => { const q = S.sq[s.id]; if (s.kind == 'kill' && q && q.s == 1 && s.enemy == base) q.p++ });
-  S.party.forEach(i => S.hp[i] = Math.max(S.hp[i], 8)); if (Math.random() < .2) { S.snacks++; m += ' Found a snack!' }
-  const e = B.e, boss = e.boss, shadow = t == 'umbra';
-  if (shadow) { const drops = ['hoodie', 'vest', 'coin', 'watch', 'locket'].filter(i => !S.items.includes(i)); if (drops.length) { const it = drops[Math.random() * drops.length | 0]; giveItem(it); m += ' It dropped ' + ITEMDEF[it].n + '!' } }
+  const base = EN[t].base || t; S.kills[base] = (S.kills[base] || 0) + 1;
+  S.party.forEach(i => S.hp[i] = Math.max(S.hp[i], 8)); const cash = 2 + stageIdx() * 2 + (Math.random() * 4 | 0); S.money = (S.money || 0) + cash; m += ' +$' + cash + '.';
+  const e = B.e, boss = e.boss;
   E = E.filter(q => q !== e);
-  steps([[m, null]], () => { endBattle(); if (boss) ending(); else if (shadow) D(['|The Shadow melts into the floor. Only a cold whisper is left:', '|"I\'ll see you again."']); else say(m) });
+  steps([[m, null]], () => { endBattle(); if (boss) EV.friendsvanish(); else say(m) });
 }
-function lose() { steps([['Everyone collapsed... You wake up, patched up.', null]], () => { S.party.forEach(i => S.hp[i] = maxHp(i)); if (S.backup) { S.party = S.backup; S.backup = null } sc = 'world'; B = null; if (S.m == 'world') gotoHub(({ forest: 'F', dark: 'D', beach: 'B', city: 'C' })[S.b] || 'F'); else goto(S.m) }) }
+function lose() { steps([['Everyone collapsed... You wake up, patched up.', null]], () => { S.party.forEach(i => S.hp[i] = maxHp(i)); if (S.backup) { S.party = S.backup; S.backup = null } sc = 'world'; B = null; enter(S.a, null) }) }
 function battleUpdate() {
   if (B.shk > 0) B.shk--; if (B.hurt > 0) B.hurt--; if (B.hitT > 0) B.hitT--;
   B.fx.forEach(f => f.t++); B.fx = B.fx.filter(f => f.t < 36); B.nums.forEach(n => { n.t++; n.y -= .45 }); B.nums = B.nums.filter(n => n.t < 52);
   if (B.lunge && ++B.lunge.t > 22) B.lunge = null; if (B.elunge && ++B.elunge.t > 22) B.elunge = null;
+  if (B.mode == 'items') { const L = bagList(); if (!L.length) { B.mode = 'menu'; return } B.isel = Math.min(B.isel, L.length - 1);
+    if (up()) B.isel = (B.isel + L.length - 1) % L.length; if (dn()) B.isel = (B.isel + 1) % L.length; if (esc() || hit.KeyX) { B.mode = 'menu'; return }
+    if (ok()) { const id = L[B.isel]; beep(500, .05); if (consNeedsTarget(id)) { B.mode = 'target'; B.use = id; B.tsel = Math.max(0, B.order.indexOf(B.act)) } else useBattleItem(id, B.act) } return }
+  if (B.mode == 'target') { const n = B.order.length; if (up() || lf()) B.tsel = (B.tsel + n - 1) % n; if (dn() || rt()) B.tsel = (B.tsel + 1) % n; if (esc() || hit.KeyX) { B.mode = 'items'; return } if (ok()) useBattleItem(B.use, B.order[B.tsel]); return }
   if (B.mode == 'menu') { if (up()) B.sel = (B.sel + 3) % 4; if (dn()) B.sel = (B.sel + 1) % 4; if (lf() || rt()) B.sel = (B.sel + 2) % 4; if (ok()) { beep(500, .05); act(B.sel) } }
   else { B.tm--; if (ok() || B.tm <= 0) { const c = B.cb; B.cb = null; c && c() } }
 }
@@ -100,13 +118,12 @@ function drawFX() {
   B.nums.forEach(n => { const a = n.t > 36 ? 1 - (n.t - 36) / 16 : 1; X.globalAlpha = Math.max(0, a); txt(n.txt, n.x, n.y, n.c, 'center', 9); X.globalAlpha = 1 });
 }
 function drawBattle() {
-  const mp = mapOf(); sW(); r(0, 0, VW, VH, '#000'); X.drawImage(mp.im, -CAM.x, -CAM.y); X.drawImage(mp.tp, -CAM.x, -CAM.y); r(0, 0, VW, VH, B.t == 'umbra' ? 'rgba(30,0,10,.78)' : 'rgba(8,6,20,.66)');
+  const mp = areaMap(S.a); sW(); r(0, 0, VW, VH, '#000'); X.drawImage(mp.im, -CAM.x, -CAM.y); drawPropSprites(mp, CAM.x, CAM.y); X.drawImage(mp.tp, -CAM.x, -CAM.y); r(0, 0, VW, VH, 'rgba(8,6,20,.66)');
   const sx = B.shk % 2 ? 5 : 0, el = B.elunge ? Math.sin(Math.min(1, B.elunge.t / 20) * Math.PI) : 0, hurtY = B.hurt > 0 ? -4 : 0;   // the enemy lunges at the party when it attacks
   if (B.hurt > 0 && B.hurt % 2) X.globalAlpha = .55; drawEnemy(B.t, 320 + sx, 300 + hurtY + el * 34, 2.6 + el * .35, true); X.globalAlpha = 1;
   sU();
-  const fx0 = 128, fy = 3, im = ENIMG[EN[B.t].spr].big; r(fx0, fy, 58, 44, '#fff'); r(fx0 + 1, fy + 1, 56, 42, '#101018');   // close-up portrait of the enemy
-  if (ready(im)) { X.save(); X.beginPath(); X.rect(fx0 + 1, fy + 1, 56, 42); X.clip(); X.imageSmoothingEnabled = false; X.drawImage(im, 12, 4, 72, 54, fx0 + 1, fy + 1, 56, 42); X.restore() }
-  r(190, fy, 112, 22, 'rgba(10,8,22,.85)'); txt(EN[B.t].n.toUpperCase(), 194, fy + 1, '#fff', 'left', 7); emoIcon(B.emo, 286, fy + 1); r(194, fy + 12, 88, 5, '#000'); r(195, fy + 13, 86 * clamp(B.hp / B.mh, 0, 1), 3, '#e44');
+  const fy = 3;
+  r(104, fy, 112, 22, 'rgba(10,8,22,.85)'); r(104, fy, 112, 1, '#fff'); txt(EN[B.t].n.toUpperCase(), 108, fy + 2, '#fff', 'left', 7); emoIcon(B.emo, 200, fy + 1); r(108, fy + 13, 88, 5, '#000'); r(109, fy + 14, 86 * clamp(B.hp / B.mh, 0, 1), 3, '#e44');
   B.order.forEach((i, j) => {   // party in the four corners
     const [px, py] = SLOTS[j], left = j < 2, hp = S.hp[i], act = B.mode == 'menu' && B.act == i, bounce = act ? Math.round(Math.sin(tick / 6) * 2) : 0, hit = B.hit == i && B.hitT > 0 ? (B.hitT % 2 ? 3 : -3) : 0;
     const lp = B.lunge && B.lunge.i == i ? Math.sin(Math.min(1, B.lunge.t / 22) * Math.PI) : 0, lx = lp * 72 * (left ? 1 : -1), ly = lp * (96 - py) * .5;   // attackers rush the enemy
@@ -116,6 +133,10 @@ function drawBattle() {
   });
   drawFX();
   r(98, 138, 124, 40, '#fff'); r(99, 139, 122, 38, '#000');
-  if (B.mode == 'menu') { txt(CH[B.act].n.toUpperCase(), 103, 140, '#ffd23c', 'left', 6); ['Attack', CH[B.act].skill[0], 'Snack (' + S.snacks + ')', 'Run'].forEach((s, i) => txt((B.sel == i ? '> ' : '  ') + s, 103 + (i % 2) * 58, 150 + (i >> 1) * 11, B.sel == i ? '#ff0' : '#fff', 'left', 7)) }
+  if (B.mode == 'menu') { txt(CH[B.act].n.toUpperCase(), 103, 140, '#ffd23c', 'left', 6); ['Attack', CH[B.act].skill[0], 'Items', 'Run'].forEach((s, i) => txt((B.sel == i ? '> ' : '  ') + s, 103 + (i % 2) * 58, 150 + (i >> 1) * 11, B.sel == i ? '#ff0' : '#fff', 'left', 7)) }
+  else if (B.mode == 'items' || B.mode == 'target') { const L = bagList(); r(90, 62, 140, 76, '#fff'); r(91, 63, 138, 74, '#000'); txt(B.mode == 'target' ? 'USE ' + CONS[B.use].n.toUpperCase() + ' ON:' : 'ITEMS', 96, 65, '#ffd23c', 'left', 6);
+    if (B.mode == 'items') { const top = Math.max(0, B.isel - 4); L.slice(top, top + 5).forEach((id, k) => { const i = k + top, y = 75 + k * 11; if (i == B.isel) r(93, y - 1, 134, 11, '#2a2a40'); drawCons(id, 96, y - 2, .7); txt(CONS[id].n + ' x' + S.bag[id], 108, y, '#fff', 'left', 6); txt(consTag(id), 225, y, '#8f8', 'right', 5) }) }
+    else B.order.forEach((i, k) => txt((B.tsel == k ? '> ' : '  ') + CH[i].n + '  ' + S.hp[i] + '/' + maxHp(i), 100, 76 + k * 11, B.tsel == k ? '#ff0' : S.hp[i] > 0 ? '#fff' : '#888', 'left', 7));
+    txt(CH[B.act].n.toUpperCase(), 103, 140, '#ffd23c', 'left', 6); wrapPx(B.mode == 'items' && L[B.isel] ? CONS[L[B.isel]].d : 'Z: use   X: back', 114, 6).slice(0, 3).forEach((s, i) => txt(s, 104, 150 + i * 8, '#ddd', 'left', 6)) }
   else wrapPx(B.msg, 114, 7).slice(0, 4).forEach((s, i) => txt(s, 104, 142 + i * 9, '#fff', 'left', 7));
 }

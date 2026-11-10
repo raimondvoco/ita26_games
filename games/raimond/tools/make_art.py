@@ -95,18 +95,12 @@ def enemy(kind):
         E(d, 48, 42, 30, 28, c('#1d6a6a')); E(d, 48, 42, 28, 26, c('#5fd8c8')); E(d, 40, 30, 12, 8, c('#b8f4ea'))
         for i in range(5): d.line([(24 + i * 12) * 4, 62 * 4, (24 + i * 12 + (6 if i % 2 else -6)) * 4, 90 * 4], fill=c('#3ab8a8'), width=16)
         eyes(d, 46, 10, 4)
-    if kind == 'umbra':   # the recurring Shadow: tall, black, too many teeth
-        Pg(d, [(36, 90), (30, 40), (38, 16), (58, 16), (66, 40), (60, 90), (54, 70), (48, 92), (42, 70)], (8, 6, 12)); 
-        for s_ in (-1, 1): Pg(d, [(48 + s_ * 14, 34), (48 + s_ * 40, 50), (48 + s_ * 46, 86), (48 + s_ * 40, 88), (48 + s_ * 34, 54), (48 + s_ * 12, 46)], (8, 6, 12))
-        E(d, 40, 30, 5, 7, (255, 255, 255)); E(d, 56, 30, 5, 7, (255, 255, 255)); E(d, 40, 31, 1.5, 4, (8, 6, 12)); E(d, 56, 31, 1.5, 4, (8, 6, 12))
-        d.arc([38 * 4, 34 * 4, 58 * 4, 52 * 4], 20, 160, fill=(255, 255, 255), width=10)
-        for i in range(7): R(d, 40 + i * 2.6, 40, 1.6, 4, (255, 255, 255))
     big = finish(b, 96, 96, 20); bigo = outline(big, .3)
     bigo.save(os.path.join(ASSETS, 'enemies', f'{kind}_big.png'))
     sm = finish(b, 28, 28, 14); outline(sm, .3).save(os.path.join(ASSETS, 'enemies', f'{kind}_small.png'))
 
 # ---------------------------------------------------------------- items: black fill, white outline, own sprite (32) and portrait (96)
-ITEMS = ['bat', 'scissors', 'pan', 'umbrella', 'wrench', 'hoodie', 'vest', 'boots', 'headphones', 'locket', 'coin', 'watch', 'cassette', 'wristband', 'polaroid', 'lantern']
+ITEMS = ['scrap', 'clip', 'bat', 'scissors', 'pan', 'umbrella', 'wrench', 'hoodie', 'vest', 'boots', 'headphones', 'locket', 'coin', 'watch', 'cassette', 'wristband', 'polaroid', 'lantern']
 def item_ops(n):
     """returns list of (kind, args). coords 0..100. kinds: poly, ell, line(w), rrect; 'detail' ops are white strokes on top"""
     O = []; D = []
@@ -126,7 +120,14 @@ def item_ops(n):
     if n == 'cassette': O.append(('rrect', (8, 22, 92, 80))); D.append(('rrectw', (16, 28, 84, 52))); D.append(('ellw', (22, 34, 40, 50))); D.append(('ellw', (60, 34, 78, 50))); Dl((30, 66), (70, 66)); Dl((36, 66), (32, 78)); Dl((64, 66), (68, 78))
     if n == 'wristband': O.append(('rrect', (6, 38, 94, 64))); P([(40, 60), (60, 60), (60, 90), (50, 84), (40, 90)]); Dl((14, 50), (86, 50)); D.append(('rrectw', (42, 64, 58, 80)))
     if n == 'polaroid': O.append(('rrect', (14, 10, 86, 92))); D.append(('rrectw', (22, 18, 78, 66))); Dl((24, 56), (40, 40)); Dl((40, 40), (52, 54)); Dl((52, 54), (62, 46)); Dl((62, 46), (76, 62)); Dl((30, 78), (70, 78))
+    if n == 'scrap': P([(14, 12), (40, 6), (56, 14), (80, 8), (88, 30), (82, 52), (90, 74), (60, 88), (40, 82), (18, 90), (10, 62), (16, 40)]); Dl((24, 30), (70, 26)); Dl((24, 44), (74, 42)); Dl((24, 58), (60, 58)); Dl((30, 72), (54, 70))
+    if n == 'clip': O.append(('rrect', (12, 36, 88, 62))); El((60, 30, 82, 52)); D.append(('ellw', (66, 36, 76, 46))); Dl((18, 49), (52, 49)); D.append(('polyw', [(71, 38), (73, 43), (78, 43), (74, 46), (76, 51), (71, 48), (66, 51), (68, 46), (64, 43), (69, 43)]))
     if n == 'lantern': O.append(('rrect', (26, 28, 74, 84))); L((36, 28), (36, 12), 4); L((64, 28), (64, 12), 4); L((36, 12), (64, 12), 4); D.append(('rrectw', (34, 38, 66, 76))); D.append(('ellw', (42, 50, 58, 68))); Dl((26, 84), (74, 84), 4)
+    if n == 'luckychip': El((10, 10, 90, 90)); D.append(('ellw', (22, 22, 78, 78))); [Dl((50 + 40 * __import__('math').cos(k * .785), 50 + 40 * __import__('math').sin(k * .785)), (50 + 30 * __import__('math').cos(k * .785), 50 + 30 * __import__('math').sin(k * .785)), 3) for k in range(8)]; D.append(('polyw', [(50, 34), (60, 50), (50, 66), (40, 50)]))
+    if n == 'bunny': El((26, 40, 74, 92)); El((32, 16, 68, 52)); P([(34, 22), (30, 2), (42, 4), (44, 20)]); P([(56, 20), (58, 4), (70, 2), (66, 22)]); D.append(('ellw', (40, 28, 46, 34))); D.append(('ellw', (54, 28, 60, 34))); Dl((46, 42), (54, 42)); Dl((40, 70), (60, 70))
+    if n == 'ticket': O.append(('rrect', (6, 26, 94, 74))); Dl((30, 30), (30, 70)); D.append(('rrectw', (38, 34, 86, 66))); Dl((50, 42), (72, 42)); Dl((50, 50), (66, 50)); Dl((50, 58), (70, 58))
+    if n == 'shaker': O.append(('rrect', (34, 30, 66, 94))); P([(34, 32), (40, 14), (60, 14), (66, 32)]); O.append(('rrect', (44, 4, 56, 16))); Dl((40, 50), (60, 50)); Dl((40, 62), (60, 62)); Dl((38, 30), (62, 30))
+    if n == 'neonpipe': L((20, 86), (80, 14), 12); El((70, 6, 90, 26)); El((10, 76, 30, 96)); Dl((26, 78), (74, 22)); Dl((30, 82), (78, 26), 1)
     return O, D
 def render_item(n, size, hatch=False):
     K = 8; S = size * K; sc = S / 100.0
@@ -148,8 +149,8 @@ def render_item(n, size, hatch=False):
         h = ImageDraw.Draw(img)
         for i in range(-S, S, K * 6): h.line([i, S, i + S, 0], fill=(255, 255, 255, 38), width=1)
     return img
-def make_items():
-    for n in ITEMS:
+def make_items(only=None):
+    for n in (only or ITEMS):
         sp = render_item(n, 32).resize((32, 32), Image.BOX); a = np.array(sp); a[:, :, 3] = np.where(a[:, :, 3] > 110, 255, 0)
         g = (a[:, :, :3].mean(axis=2) > 128); a[:, :, :3] = np.where(g[:, :, None], 255, 12); Image.fromarray(a).save(os.path.join(ASSETS, 'items', f'{n}.png'))
         big = render_item(n, 96, True); bg = Image.new('RGBA', (96, 96), (22, 22, 24, 255)); bg.alpha_composite(big.resize((96, 96), Image.LANCZOS))
@@ -231,7 +232,7 @@ if __name__ == '__main__':
     humans = list(M.NPC)
     for id_ in humans:
         for d in M.DIRS: M.npc_sheet(id_, d).save(os.path.join(SPR, f'npc_{id_}_{d}.png'))
-    for k in ('sprout', 'shadow', 'crab', 'glitch', 'house', 'frostling', 'jelly', 'umbra'): enemy(k)
+    for k in ('sprout', 'shadow', 'crab', 'glitch', 'house', 'frostling', 'jelly'): enemy(k)
     for id_ in humans:
         for emo in ('neutral', 'happy', 'sad', 'angry', 'shock', 'worried', 'blush', 'dark'): M.portrait(id_, emo).save(os.path.join(POR, f'npc_{id_}_{emo}.png'))
     make_items(); make_pickups(); make_variants(); make_animals(); print('art done')
