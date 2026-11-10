@@ -2,130 +2,122 @@
 <html lang="et">
 <head>
     <meta charset="UTF-8">
-    <title>Ussimäng</title>
+    <title>Ussi mäng</title>
+
     <style>
         body {
-            background: #222;
-            color: white;
             text-align: center;
+            background-color: #222;
+            color: white;
             font-family: Arial;
         }
 
         canvas {
-            background: black;
-            border: 3px solid lime;
+            background-color: black;
+            border: 3px solid white;
         }
     </style>
 </head>
+
 <body>
 
-<h1>Ussimäng</h1>
-<p id="punktid">Punktid: 0</p>
-<canvas id="mang" width="600" height="400"></canvas>
-<br>
-<button onclick="algus()">Alusta uuesti</button>
+    <h1>Ussi mäng</h1>
+    <h2>Skoor: <span id="skoor">0</span></h2>
 
-<script>
-const canvas = document.getElementById("mang");
-const ctx = canvas.getContext("2d");
+    <canvas id="mang" width="400" height="400"></canvas>
 
-const RUUT = 20;
-let uss, oun, suund, punktid, mangLabi, taimer;
+    <script>
+        const canvas = document.getElementById("mang");
+        const ctx = canvas.getContext("2d");
 
-function uusOun() {
-    let koht;
-    do {
-        koht = {
-            x: Math.floor(Math.random() * 30) * RUUT,
-            y: Math.floor(Math.random() * 20) * RUUT
+        const ruut = 20;
+
+        let uss = [
+            { x: 200, y: 200 }
+        ];
+
+        let toit = {
+            x: 100,
+            y: 100
         };
-    } while (uss.some(osa => osa.x === koht.x && osa.y === koht.y));
-    return koht;
-}
 
-function algus() {
-    clearTimeout(taimer);
-    uss = [
-        {x: 100, y: 100},
-        {x: 80, y: 100},
-        {x: 60, y: 100}
-    ];
-    suund = {x: RUUT, y: 0};
-    punktid = 0;
-    mangLabi = false;
-    oun = uusOun();
-    samm();
-}
+        let dx = ruut;
+        let dy = 0;
 
-document.addEventListener("keydown", function(event) {
-    if (mangLabi) return;
+        let skoor = 0;
+        let mangib = true;
 
-    if (event.key === "ArrowUp" && suund.y !== RUUT)
-        suund = {x: 0, y: -RUUT};
-    else if (event.key === "ArrowDown" && suund.y !== -RUUT)
-        suund = {x: 0, y: RUUT};
-    else if (event.key === "ArrowLeft" && suund.x !== RUUT)
-        suund = {x: -RUUT, y: 0};
-    else if (event.key === "ArrowRight" && suund.x !== -RUUT)
-        suund = {x: RUUT, y: 0};
-});
+        document.addEventListener("keydown", liiguta);
 
-function samm() {
-    if (mangLabi) return;
+        function liiguta(e) {
+            if (e.key === "ArrowUp" && dy === 0) {
+                dx = 0;
+                dy = -ruut;
+            }
 
-    let pea = {
-        x: uss[0].x + suund.x,
-        y: uss[0].y + suund.y
-    };
+            if (e.key === "ArrowDown" && dy === 0) {
+                dx = 0;
+                dy = ruut;
+            }
 
-    let soob = pea.x === oun.x && pea.y === oun.y;
-    let keha = soob ? uss : uss.slice(0, -1);
+            if (e.key === "ArrowLeft" && dx === 0) {
+                dx = -ruut;
+                dy = 0;
+            }
 
-    if (
-        pea.x < 0 || pea.x >= 600 ||
-        pea.y < 0 || pea.y >= 400 ||
-        keha.some(osa => osa.x === pea.x && osa.y === pea.y)
-    ) {
-        mangLabi = true;
-        joonista();
-        ctx.fillStyle = "yellow";
-        ctx.font = "30px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("MÄNG LÄBI!", 300, 200);
-        return;
-    }
+            if (e.key === "ArrowRight" && dx === 0) {
+                dx = ruut;
+                dy = 0;
+            }
+        }
 
-    uss.unshift(pea);
+        function joonista() {
+            if (!mangib) return;
 
-    if (soob) {
-        punktid++;
-        oun = uusOun();
-    } else {
-        uss.pop();
-    }
+            ctx.clearRect(0, 0, 400, 400);
 
-    joonista();
-    taimer = setTimeout(samm, 120);
-}
+            let pea = {
+                x: uss[0].x + dx,
+                y: uss[0].y + dy
+            };
 
-function joonista() {
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 600, 400);
+            // Seina kontroll
+            if (
+                pea.x < 0 || pea.x >= 400 ||
+                pea.y < 0 || pea.y >= 400
+            ) {
+                mangib = false;
+                alert("Mäng läbi! Skoor: " + skoor);
+                return;
+            }
 
-    uss.forEach((osa, i) => {
-        ctx.fillStyle = i === 0 ? "lime" : "green";
-        ctx.fillRect(osa.x, osa.y, RUUT - 2, RUUT - 2);
-    });
+            uss.unshift(pea);
 
-    ctx.fillStyle = "red";
-    ctx.fillRect(oun.x, oun.y, RUUT - 2, RUUT - 2);
+            // Toidu söömine
+            if (pea.x === toit.x && pea.y === toit.y) {
+                skoor++;
+                document.getElementById("skoor").textContent = skoor;
 
-    document.getElementById("punktid").textContent =
-        "Punktid: " + punktid;
-}
+                toit.x = Math.floor(Math.random() * 20) * ruut;
+                toit.y = Math.floor(Math.random() * 20) * ruut;
+            } else {
+                uss.pop();
+            }
 
-algus();
-</script>
+            // Ussi joonistamine
+            ctx.fillStyle = "lime";
+
+            uss.forEach(osa => {
+                ctx.fillRect(osa.x, osa.y, ruut - 2, ruut - 2);
+            });
+
+            // Toidu joonistamine
+            ctx.fillStyle = "red";
+            ctx.fillRect(toit.x, toit.y, ruut, ruut);
+        }
+
+        setInterval(joonista, 120);
+    </script>
 
 </body>
 </html>
