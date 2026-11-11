@@ -50,7 +50,9 @@ function lRoomNew(x, z, y = 0) { const f = y > 1.5 ? 1 : 0; return LROOMS.find(r
     for (const t in mb.g) { const a = mb.g[t]; for (let i = st[t] || 0; i < a.length; i += 12) { x0 = Math.min(x0, a[i]); x1 = Math.max(x1, a[i]); y0 = Math.min(y0, a[i + 1]); y1 = Math.max(y1, a[i + 1]); z0 = Math.min(z0, a[i + 2]); z1 = Math.max(z1, a[i + 2]); n++ } }
     if (!n) return;
     if (LAYOUT.stretch) { for (const t in mb.g) { const a = mb.g[t]; for (let i = st[t] || 0; i < a.length; i += 12) { const [X, Z] = LM(a[i], a[i + 2], a[i + 1]); a[i] = X; a[i + 2] = Z } } return }
-    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, [X, Z] = LM(cx, cz, (y0 + y1) / 2), dx = X - cx, dz = Z - cz;
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, [X, Z] = LM(cx, cz, (y0 + y1) / 2), dx = X - cx, dz = Z - cz, en = {};
+    for (const t in mb.g) en[t] = mb.g[t].length;
+    (mb._lrec = mb._lrec || []).push({ b: [x0, y0, z0, x1, y1, z1], dx, dz, st: { ...st }, en });
     if (Math.abs(dx) + Math.abs(dz) < 1e-9) return;
     for (const t in mb.g) { const a = mb.g[t]; for (let i = st[t] || 0; i < a.length; i += 12) { a[i] += dx; a[i + 2] += dz } }
   };
@@ -67,3 +69,32 @@ function lRoomNew(x, z, y = 0) { const f = y > 1.5 ? 1 : 0; return LROOMS.find(r
 // run fn with mapping off (for things built straight in new coordinates) / with stretching on
 function lRaw(fn) { LAYOUT.raw++; try { return fn() } finally { LAYOUT.raw-- } }
 function lStretch(fn) { const o = LAYOUT.stretch; LAYOUT.stretch = 1; try { return fn() } finally { LAYOUT.stretch = o } }
+
+// Moving every object by its own centre pulls apart things that belong together: a mouse drifts off its desk, the
+// photos slide off the wardrobe they're stuck to. So once the house is built, anything that rested on top of something
+// (or was fixed to its side) on the old plan is moved exactly as that thing was. Floor-standing furniture is left alone.
+function lSettle(mb) {
+  const R = mb._lrec; if (!R) return; mb._lrec = null;
+  const vol = b => Math.max(b[3] - b[0], .001) * Math.max(b[4] - b[1], .001) * Math.max(b[5] - b[2], .001);
+  const floorY = y => y > 1.5 ? 3 : 0, e = .025;
+  R.forEach(r => { r.v = vol(r.b); r.fx = r.dx; r.fz = r.dz });
+  const order = R.slice().sort((a, b) => a.b[1] - b.b[1]);
+  let moved = 0;
+  for (const A of order) {
+    const a = A.b, onFloor = a[1] - floorY(a[1]) < .05, small = A.v < .02, cx = (a[0] + a[3]) / 2, cz = (a[2] + a[5]) / 2;
+    if (onFloor && !small) continue;
+    const rm = lRoom(cx, cz, (a[1] + a[4]) / 2), onWall = Math.min(a[0] - rm.o[0], rm.o[2] - a[3], a[2] - rm.o[1], rm.o[3] - a[5]) < .08;   // hung on a wall: stays with the wall
+    let best = null, bestY = -1e9, bestV = 0;
+    for (const B of R) { if (B === A) continue; const b = B.b;
+      if (b[4] - b[1] < .04 || B.v < A.v * 2 || Math.max(b[3] - b[0], b[5] - b[2]) > 3.2) continue;   // not flat, bigger than A, not a wall or floor
+      if (a[3] < b[0] - e || a[0] > b[3] + e || a[4] < b[1] - e || a[1] > b[4] + e || a[5] < b[2] - e || a[2] > b[5] + e) continue;   // touching
+      const onTop = Math.abs(a[1] - b[4]) < .04 && cx > b[0] - e && cx < b[3] + e && cz > b[2] - e && cz < b[5] + e;
+      if (onTop) { if (b[4] > bestY) { bestY = b[4]; best = B } }
+      else if (small && !onWall && bestY == -1e9 && B.v > bestV && !(b[4] - floorY(b[1]) > 2.6)) { bestV = B.v; best = B } }
+    if (!best) continue;
+    const ddx = best.fx - A.dx, ddz = best.fz - A.dz; A.fx = best.fx; A.fz = best.fz;
+    if (Math.abs(ddx) + Math.abs(ddz) < 1e-6) continue; moved++;
+    for (const t in A.en) { const g = mb.g[t]; for (let i = A.st[t] || 0; i < A.en[t]; i += 12) { g[i] += ddx; g[i + 2] += ddz } }
+  }
+  return moved;
+}

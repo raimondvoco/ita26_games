@@ -342,7 +342,7 @@ function vmArm(side, at, fing, palm, curl, pole) {   // all in camera space
 //    down when you choose something, and the hand slides up the phone to reach the top rows, like a real regrip
 const PHONE_VM = { c: [-.03, -.012, -.34], tilt: .1, w: [.018, -.028, .1], f: [-.62, 0, -.78], curl: .85 }, VMFOV = .62;
 // the thumb's knuckle in the phone's space (x across, y out of the screen, z down its length), its two bones, radii
-const THUMB = { B: [.0425, .002, .046], a: .03, b: .026, r: [.0084, .0077, .0067] };
+const THUMB = { B: [.0428, .005, .0062], a: .02, b: .017, r: [.0095, .009, .0085] };   // (the hand model sets B, a, b)
 const PSCR = { w: .064, h: .14, y: .0095 };   // the screen: 60 x 131 UI units over .064 x .14 m, and its surface
 const phScr = (ux, uy, h = 0) => [-PSCR.w / 2 + ux / 60 * PSCR.w, PSCR.y + h, -PSCR.h / 2 + uy / 131 * PSCR.h];
 function phoneVM(t = 0, off = [0, 0, 0], rot) {
@@ -392,7 +392,7 @@ function phoneAnim(u) {
   for (let k = 0; k < 3; k++) { PHA.tv[k] = (PHA.tv[k] + (T[k] - tip[k]) * .24) * .58; tip[k] += PHA.tv[k] }
   const pr = PHA.tap > 0 ? Math.sin(Math.PI * (14 - PHA.tap) / 14) : 0; off[1] -= pr * .003; rot[0] += pr * .025;   // the phone gives a little under the press
   // the hand slides up the phone when the thumb needs to reach the top of the screen, and back down after
-  const want = clamp(THUMB.B[2] - tip[2] - .048, 0, .026); PHA.slide += (want - PHA.slide) * .1;
+  const want = clamp(THUMB.B[2] - tip[2] - (THUMB.a + THUMB.b) * .68, -.03, .04); PHA.slide += (want - PHA.slide) * .1;   // up the phone for the top rows, down for the bottom
   return { off, rot, tip, slide: PHA.slide, rise: r };
 }
 // where the thumb's tip should be: over what you're pointing at, pressing when you pick it, resting on the edge otherwise
@@ -413,19 +413,63 @@ function thumbTarget(u, t) {
   if (aim) return phScr(aim[0], aim[1] + 3, THUMB.r[2] + .001 + hover + Math.sin(t / 29) * .0015);
   return rest;
 }
+// ---- the hand that holds the phone: the supplied hand model (js/p2_handmesh.js), already posed round the phone, with
+// three bones: 0 the hand (everything but the thumb), 1 the thumb's first bone, 2 its tip. Hitori's is pale with long
+// deep-red stiletto nails; Hikari's a little warmer with natural nails.
+const HMESH = {}, TH_UP = [.25, 1, 0];
+function rigidInv(M) { const o = new Float32Array(16); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) o[i * 4 + j] = M[j * 4 + i]; for (let i = 0; i < 3; i++) o[12 + i] = -(o[i] * M[12] + o[4 + i] * M[13] + o[8 + i] * M[14]); o[15] = 1; return o }
+function handTex(girl) {
+  const hk = girl == 'hikari', sk = 'hand_' + girl, nk = 'nail_' + girl; if (TX[sk]) return;
+  tex(sk, 64, (g, s) => { texNoise(g, s, hk ? '#ecd8ce' : '#eee8e8', .03, hk ? 161 : 162, 1); const R = rng(hk ? 163 : 164);
+    for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(${hk ? '200,120,110' : '190,150,160'},${.04 + R() * .05})`; g.fillRect(R() * s, R() * s, 1 + R() * 3, 1) } });   // faint blush and creases
+  tex(nk, 32, (g, s) => { // across the nail = u, base to tip = v
+    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { const u = x / (s - 1), v = y / (s - 1), sh = .75 + .25 * Math.sin(u * Math.PI);
+      let c;
+      if (hk) { c = v > .86 ? [244, 236, 232] : v < .16 ? [238, 214, 210] : [226, 168, 164]; }   // half-moon, pink, white free edge
+      else { c = [118, 6, 20]; const hl = Math.exp(-((u - .38) ** 2) / .006) * (1 - v * .4); c = c.map((k, i) => k + hl * [120, 90, 95][i]) }   // deep red lacquer and its shine
+      g.fillStyle = `rgb(${c.map(k => Math.min(255, k * sh) | 0)})`; g.fillRect(x, y, 1, 1) } });
+  if (!hk) SPEC[nk] = .7;
+}
+function handMesh(girl) {
+  if (HMESH[girl]) return HMESH[girl]; const D = typeof HANDMESH != 'undefined' && HANDMESH[girl]; if (!D || !glInit()) return null; handTex(girl);
+  const b64 = s => { const t = atob(s), u = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) u[i] = t.charCodeAt(i); return u.buffer };
+  const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(b64(D.v)), gl.STATIC_DRAW);
+  const ib = {}; for (const p in D.i) { const a = new Uint16Array(b64(D.i[p])), b = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, a, gl.STATIC_DRAW); ib[p] = { b, n: a.length, t: gl.UNSIGNED_SHORT } }
+  return HMESH[girl] = { D, skin: { vb, ib, tex: 'hand_' + girl, ptex: { nail: 'nail_' + girl }, spec: .1 }, inv1: rigidInv(segM(D.B, D.K, TH_UP)), inv2: rigidInv(segM(D.K, D.T, TH_UP)),
+    a: V3.len(V3.sub(D.K, D.B)), b: V3.len(V3.sub(D.T, D.K)) };
+}
+// the sleeve over the wrist: Hitori's coat cuff, or Hikari's oversized jumper over the back of her hand and the thumb's root
+const SLEEVES = {};
+function phoneSleeve(kind, D) {
+  if (!kind || !D) return null; if (SLEEVES[kind]) return SLEEVES[kind]; texBody(); const m = new MB(), wr = D.wr, fa = D.fa, at = t => V3.add(wr, V3.add(V3.mul(fa, t), [0, -.003, 0]));
+  if (kind == 'short') { m.tube('hitsleeve', [at(.16), at(.1), at(.05), at(-.012)], [.05, .048, .045, .04], { seg: 16, sy: .62 }); m.tube('hitsleeve2', [at(-.008), at(-.02)], [.0415, .0405], { seg: 16, sy: .62 }) }
+  else {
+    const kn = [.026, -.024, .02], mid = V3.lerp(wr, kn, .5), pts = [at(.15), at(.08), at(.02), V3.lerp(wr, kn, .3), mid, V3.lerp(wr, kn, .8)];
+    m.tube('hksleeve', pts, [.05, .047, .044, .041, .037, .032], { seg: 16, sy: .62 });
+    const e = pts[pts.length - 1], d = V3.norm(V3.sub(e, pts[pts.length - 2])); m.tube('hksleeve2', [V3.sub(e, V3.mul(d, .006)), V3.add(e, V3.mul(d, .002))], [.034, .033], { seg: 16, sy: .62 });
+    m.sphere('hksleeve', ...V3.lerp(wr, D.B, .62), .019, .016, .024, { seg: 14, rings: 8 });   // the cuff bunched over the thumb's root
+    for (const t of [.3, .6]) { const p = V3.lerp(pts[1], pts[3], t); m.tube('hksleeve2', [V3.sub(p, V3.mul(fa, .003)), V3.add(p, V3.mul(fa, .003))], [.046 - t * .006, .046 - t * .006], { seg: 16, sy: .62 }) }
+  }
+  return SLEEVES[kind] = m.build();
+}
 function phoneHeld(t, off, A) {   // returns { objs, corners (UI coords) }
   const L = phoneVM(t, off, A && A.rot), W = M4.mul(camWorld(), L), ph = H3.extra.phoneHand || (H3.extra.phoneHand = single(m => MOD.phone(m)));
-  const sl = A ? A.slide : 0, LG = M4.mul(L, M4.tr(0, 0, -sl)), WG = M4.mul(W, M4.tr(0, 0, -sl)), loc = p => M4.pt(LG, p);   // the hand, slid along the phone
-  const H = meModel(), own = H && H.own, hk = own ? H.key == 'hikari' : P2.day == 3;
-  const sk = own ? (hk ? 'skinK' : 'skinH') : 'skin3', gr = phoneGrip(sk, own ? (hk ? 'long' : 'short') : (hk ? 'long' : false));
-  const wr = loc(hk ? V3.add(gr.wrist, [.03, -.012, .07]) : gr.wrist), fing = M4.dir(L, PHONE_VM.f), palm = M4.dir(L, [0, 1, 0]);
-  const arm = vmArm(1, wr, fing, palm, PHONE_VM.curl, [1, -1.2, .3]); if (own) arm[0].parts = []; arm[2] = posed(gr, WG);
-  // the thumb: two bones from its knuckle to the tip, the knuckle bending up and out (never down into the screen)
-  const B = V3.add(THUMB.B, [0, 0, -sl]), tip = (A && A.tip) || [.031, .018, .022], tp = thumbParts(sk);
-  const [K, T2] = ik2(B, tip, THUMB.a, THUMB.b, [.5, 1, .25]), up = [.25, 1, 0];
-  const th = [posed(tp[0], M4.mul(W, segM(B, K, up))), posed(tp[1], M4.mul(W, segM(K, T2, up)))];
+  const H = meModel(), own = H && H.own, girl = (own ? H.key == 'hikari' : P2.day == 3) ? 'hikari' : 'hitori', HM = handMesh(girl);
+  if (HM && THUMB.B !== HM.D.B) { THUMB.B = HM.D.B; THUMB.a = HM.a; THUMB.b = HM.b }
+  const sl = A ? A.slide : 0, sh = [0, 0, -sl], LG = M4.mul(L, M4.tr(...sh)), WG = M4.mul(W, M4.tr(...sh)), loc = p => M4.pt(LG, p);   // the hand, slid along the phone
+  const D = HM && HM.D, wr = loc(D ? D.wr : [.088, -.015, .064]), fing = M4.dir(L, PHONE_VM.f), palm = M4.dir(L, [0, 1, 0]);
+  const arm = vmArm(1, wr, fing, palm, PHONE_VM.curl, [1, -1.2, .3]); arm[2] = { vis: false };
+  if (own) arm[0].parts = [];
+  const objs = [posed(ph, W), ...arm];
+  const sv = phoneSleeve(own || P2.day == 3 ? (girl == 'hikari' ? 'long' : 'short') : null, D); if (sv) objs.push(posed(sv, WG));
+  if (HM) {   // the hand, and its thumb solved to reach the tip's target
+    const B = V3.add(D.B, sh), tip = (A && A.tip) || D.T, [K, T2] = ik2(B, tip, HM.a, HM.b, [.5, 1, .25]), b = new Float32Array(15 * 16);
+    b.set(WG, 0); b.set(M4.mul(M4.mul(W, segM(B, K, TH_UP)), HM.inv1), 16); b.set(M4.mul(M4.mul(W, segM(K, T2, TH_UP)), HM.inv2), 32);
+    for (let i = 3; i < 15; i++) b.set(WG, i * 16);
+    objs.push({ skin: HM.skin, bones: b, parts: ['skin', 'nail'], vis: true, groups: [] });
+  }
   const cs = [[-.032, .0095, -.07], [.032, .0095, -.07], [.032, .0095, .07], [-.032, .0095, .07]].map(p => proj3(M4.pt(W, p), true));
-  return { objs: [posed(ph, W), ...arm, ...th], corners: cs };
+  return { objs, corners: cs };
 }
 
 // ================================================================ the 3D Hitori model

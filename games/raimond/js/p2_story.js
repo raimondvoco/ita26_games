@@ -571,7 +571,7 @@ XSC.p2 = function () {
 // part two plays its own sounds; no music unless the story asks for it
 const _trackFor31 = trackFor;
 trackFor = function () { if (String(sc).startsWith('p2')) return P2.mus || 'none'; return _trackFor31() };
-// the part-one ending leads into part two; the title screen gets a PART TWO button once part one is done
+// the part-one ending leads into part two
 endDraw = function () {
   END.t++; sU(); r(0, 0, W, H, '#000');
   if (END.t < 40 && END.t % 6 < 3) r(0, 0, W, H, '#0a0612');
@@ -581,5 +581,9 @@ endDraw = function () {
   if (END.t > 560 && END.t % 60 < 40) txt('Z: wake up', W / 2, 150, '#555', 'center', 6);
   if (END.t > 560 && ok()) p2Begin('day1');
 };
+// saving part two happens on Hitori's computer (the Save game icon), into the same three slots as part one.
+// A part-two save is { p2: stage, at }; on the load menu it reads "Hitori's house" and starts that day again.
+const p2DayName = st => ({ day1: 'Day 1', dealer: 'Day 1', day2: 'Day 2', sister: 'Day 3' })[st] || 'Day 1';
+function p2Save(i) { ST.set(SK(i), JSON.stringify({ p2: P2.stage == 'dealer' ? 'day1' : P2.stage || 'day1', at: Date.now() })); ST.set('syn_played', 1) }
 const _title31 = title;
-title = function () { C.style.cursor = ''; _title31(); if (ST.get('syn_part1') && MN && MN.items) MN.items.splice(2, 0, { x: 'PART TWO', f: () => p2Begin(ST2('stage') || 'day1') }) };
+title = function () { C.style.cursor = ''; _title31() };   // (no PART TWO button: part two is reached by finishing part one)

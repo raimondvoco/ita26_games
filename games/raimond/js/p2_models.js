@@ -160,11 +160,15 @@ const MOD = {
   // kitchen base cabinets with a worktop, len along x, front facing -z
   counter(mb, len, o = {}) {
     const d = .62, h = .9; mb.box('lacquer', -len / 2, 0, -d / 2 + .06, len / 2, .1, d / 2);
-    mb.box('cabdoor', -len / 2, .1, -d / 2 + .02, len / 2, h - .04, d / 2, { skip: 'n', us: 1 });
+    mb.box('cabdoor', -len / 2, .1, -d / 2 + .02, len / 2, h - .04, d / 2, { skip: o.sink == null ? 'n' : 'nt', us: 1 });   // (no top under a sink: you'd see it through the bowls)
     const n = Math.round(len / .5), dw = len / n; for (let i = 0; i < n; i++) { const x0 = -len / 2 + i * dw; if (o.gap && x0 + dw / 2 > o.gap[0] && x0 + dw / 2 < o.gap[1]) continue;
       mb.box('cabdoor', x0 + .005, .12, -d / 2 + .005, x0 + dw - .005, h - .2, -d / 2 + .025, { fit: 1 }); mb.box('drawer', x0 + .005, h - .19, -d / 2 + .005, x0 + dw - .005, h - .05, -d / 2 + .025, { fit: 1 });
       mb.box('chrome', x0 + dw / 2 - .06, h - .125, -d / 2 - .01, x0 + dw / 2 + .06, h - .11, -d / 2 + .005); mb.box('chrome', x0 + (i % 2 ? .05 : dw - .065), .5, -d / 2 - .01, x0 + (i % 2 ? .065 : dw - .05), .7, -d / 2 + .005) }
-    mb.box('granite', -len / 2, h - .04, -d / 2 - .03, len / 2, h, d / 2, { bev: .008, us: .6 });
+    if (o.sink == null) mb.box('granite', -len / 2, h - .04, -d / 2 - .03, len / 2, h, d / 2, { bev: .008, us: .6 });
+    else {   // the worktop built round the sink's hole
+      const s = o.sink, { hw, z0, z1 } = SINKH;
+      for (const q of [[-len / 2, -d / 2 - .03, s - hw, d / 2], [s + hw, -d / 2 - .03, len / 2, d / 2], [s - hw, -d / 2 - .03, s + hw, z0], [s - hw, z1, s + hw, d / 2]]) mb.box('granite', q[0], h - .04, q[1], q[2], h, q[3], { us: .6 });
+      sinkN(mb, s) }
   },
   upperCabinets(mb, len) { const d = .34; mb.box('cabdoor', -len / 2, 0, -d / 2, len / 2, .72, d / 2, { skip: 'n' }); const n = Math.round(len / .5), dw = len / n;
     for (let i = 0; i < n; i++) { const x0 = -len / 2 + i * dw; mb.box('cabdoor', x0 + .005, .005, -d / 2 - .02, x0 + dw - .005, .715, -d / 2, { fit: 1 }); mb.box('chrome', x0 + (i % 2 ? .05 : dw - .065), .04, -d / 2 - .03, x0 + (i % 2 ? .065 : dw - .05), .2, -d / 2 - .02) }
@@ -172,8 +176,6 @@ const MOD = {
   // built into a counter at local x: the cooktop and the oven door
   stove(mb, x) { mb.box('steel', x - .3, .1, -.315, x + .3, .86, -.29, { tf: { n: 'steel' } }); mb.decal('ovenwin', x, .42, -.316, .44, .26, 'n'); mb.box('chrome', x - .22, .6, -.34, x + .22, .62, -.32); for (let i = 0; i < 4; i++) mb.cyl('darkplastic', x - .18 + i * .12, .75, -.32, .022, .025, { seg: 8, r0: .022 });
     mb.box('cooktop', x - .3, .9, -.28, x + .3, .905, .28, { fit: 1, skip: 'nsewb' }) },
-  sink(mb, x) { mb.box('steel', x - .27, .86, -.22, x + .27, .905, .2, { skip: 't' }); mb.box('steel', x - .24, .7, -.19, x + .24, .9, .17, { skip: 't', tf: { b: 'steel' } }); mb.cyl('chrome', x, .7, -.02, .02, .005);
-    mb.tube('chrome', [[x, .9, .19], [x, 1.18, .19], [x, 1.2, .1], [x, 1.12, .02]], [.016, .016, .015, .013], { seg: 6 }); for (const s of [-1, 1]) mb.cyl('chrome', x + s * .1, .9, .2, .02, .04) },
   // a fridge body (the doors are separate objects); front faces -z, hinge on the +x side
   fridgeBody(mb, w = .78, d = .72, h = 1.9) {
     const t = .04; mb.box('fridgew', -w / 2, 0, -d / 2 + .05, w / 2, h, d / 2, { skip: 'n', tf: { t: 'fridgew' } });

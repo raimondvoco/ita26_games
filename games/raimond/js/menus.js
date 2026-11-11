@@ -1,7 +1,7 @@
 // ==================== MENUS ====================
 const spr = (c, x, y, d = 0, f = 0, s = 1) => { sW(); drawChar(c, x * 2, y * 2, d, f, s); sU() };   // draw a character at UI coordinates
 function menu(o) { MN = Object.assign({ sel: 0 }, o); sc = 'menu' }
-function summ(i) { try { const d = JSON.parse(ST.get(SK(i))); return `Slot ${i + 1}: ${(AREAS[d.a] ? AREAS[d.a].nm : '?').slice(0, 14)}  Lv${d.lv}  ${Math.floor(d.t / 3600)}m` } catch (e) { return `Slot ${i + 1}: - empty -` } }
+function summ(i) { try { const d = JSON.parse(ST.get(SK(i))); if (d.p2) return `Slot ${i + 1}: Hitori's house`; return `Slot ${i + 1}: ${(AREAS[d.a] ? AREAS[d.a].nm : '?').slice(0, 14)}  Lv${d.lv}  ${Math.floor(d.t / 3600)}m` } catch (e) { return `Slot ${i + 1}: - empty -` } }
 const hasSave = () => [0, 1, 2].some(i => ST.get(SK(i)));
 function title() { S = null; menu({ t: 'title', items: [{ x: 'NEW GAME', f: () => slots('new') }, { x: 'CONTINUE', d: !hasSave(), f: () => slots('load') }, { x: 'OPTIONS', f: () => options(title) }, { x: 'QUIT', f: () => { sc = 'quit' } }] }) }
 function options(back) { menu({ title: 'Options', items: [{ x: () => 'Music  < ' + opt.m + ' >', l: () => opt.m = Math.max(0, opt.m - 1), r: () => opt.m = Math.min(10, opt.m + 1) }, { x: () => 'Sound  < ' + opt.s + ' >', l: () => opt.s = Math.max(0, opt.s - 1), r: () => opt.s = Math.min(10, opt.s + 1) }, { x: 'Fullscreen (F)', f: fs }, { x: 'Back', f: back }], back }) }
@@ -9,7 +9,8 @@ function slots(mode) {
   const back = mode == 'save' ? () => { sc = 'world' } : title;
   menu({ title: mode == 'new' ? 'Choose a save file' : mode == 'save' ? 'Save - pick a slot' : 'Load game', back, items: [0, 1, 2].map(i => ({ x: summ(i), d: mode == 'load' && !ST.get(SK(i)), f: () => {
     if (mode == 'new') { newS(i); ST.set('syn_played', 1); played = true; enter('w_tree', null, [23, 15]); dayCard(1, 'Whispering Woods', () => { sc = 'world'; fade = 1 }) }
-    if (mode == 'load') { const d = JSON.parse(ST.get(SK(i))); S = Object.assign(newS(i), d); econFix(); S.slot = i; const sx = S.sx, sy = S.sy, a = S.a; enter(a, null); if (sx) { S.x = sx; S.y = sy } sc = 'world'; fade = 1 }
+    if (mode == 'load') { const d = JSON.parse(ST.get(SK(i))); if (d.p2) { p2Begin(d.p2); return }   // a part-two save (made on Hitori's computer)
+    S = Object.assign(newS(i), d); econFix(); S.slot = i; const sx = S.sx, sy = S.sy, a = S.a; enter(a, null); if (sx) { S.x = sx; S.y = sy } sc = 'world'; fade = 1 }
     if (mode == 'save') { S.slot = i; S.sx = S.x; S.sy = S.y; const c = S.backup; ST.set(SK(i), JSON.stringify(S)); ST.set('syn_played', 1); sc = 'world'; say('Game saved to slot ' + (i + 1) + '.'); beep(660, .2) }
   } })).concat([{ x: 'Back', f: back }]) });
 }

@@ -1,6 +1,2 @@
-Synchronicity
-
-Launch index.html
-
-Credit to songmakers and asset creators:
+LISA SIIA CREDITS!!!
 (to be made)

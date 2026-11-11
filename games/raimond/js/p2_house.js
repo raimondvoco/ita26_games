@@ -110,6 +110,7 @@ function texStyle() {
   tex('tilef', 128, (g, s) => { for (let y = 0; y < s; y += 32) for (let x = 0; x < s; x += 32) { const v = 70 + R() * 18; g.fillStyle = 'rgb(' + (v | 0) + ',' + (v | 0) + ',' + (v * .96 | 0) + ')'; g.fillRect(x, y, 32, 32) } texNoiseOver(g, s, .12, 305); g.fillStyle = '#2e2e2c'; for (let p = 0; p < s; p += 32) { g.fillRect(0, p, s, 1); g.fillRect(p, 0, 1, s) } });
   tex('stairc', 64, (g, s) => { texNoise(g, s, '#7a4e2a', .08, 306, 1); for (let y = 0; y < s; y++) { g.fillStyle = 'rgba(40,20,6,' + (.05 + .05 * Math.sin(y * .8 + Math.sin(y * .2) * 3)) + ')'; g.fillRect(0, y, s, 1) } g.fillStyle = 'rgba(255,230,190,.12)'; g.fillRect(0, 0, s, 3) });
   tex('panel', 128, (g, s) => { texNoise(g, s, '#aaa69c', .03, 307, 1); for (const [x, y, w, h] of [[14, 8, 44, 30], [70, 8, 44, 30], [14, 46, 44, 34], [70, 46, 44, 34], [14, 88, 44, 32], [70, 88, 44, 32]]) { g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(x, y, w, 2); g.fillRect(x, y, 2, h); g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x, y + h - 2, w, 2); g.fillRect(x + w - 2, y, 2, h); g.fillStyle = 'rgba(0,0,0,.04)'; g.fillRect(x + 6, y + 6, w - 12, h - 12) } });
+  tex('doorpaint', 64, (g, s) => { texNoise(g, s, '#aca89e', .025, 330, 1); for (let x = 0; x < s; x++) { g.fillStyle = 'rgba(80,70,50,' + (.015 + .015 * Math.sin(x * .9 + Math.sin(x * .13) * 2)) + ')'; g.fillRect(x, 0, 1, s) } });
   tex('door', 128, (g, s) => { g.drawImage(TX.panel.cv, 0, 0, s, s) });
   tex('cabdoor', 64, (g, s) => { texNoise(g, s, '#a8916c', .05, 308, 1); for (let x = 0; x < s; x++) { g.fillStyle = 'rgba(90,60,30,' + (.03 + .03 * Math.sin(x * .7)) + ')'; g.fillRect(x, 0, 1, s) } g.strokeStyle = 'rgba(70,46,22,.45)'; g.lineWidth = 2; g.strokeRect(6, 6, s - 12, s - 12); g.strokeStyle = 'rgba(255,240,210,.2)'; g.lineWidth = 1; g.strokeRect(9, 9, s - 18, s - 18) });
   tex('drawer', 64, (g, s) => { texNoise(g, s, '#a28a66', .05, 309, 1); g.strokeStyle = 'rgba(70,46,22,.45)'; g.lineWidth = 2; g.strokeRect(4, 6, s - 8, s - 12) });
@@ -243,9 +244,13 @@ function doorTrimN(mb) {
 function prop(mb, t, x0, y0, z0, x1, y1, z1, o = {}) { mb.box(t, x0, y0, z0, x1, y1, z1, o); if (!o.ns) hs(x0, y0, z0, x1, y1, z1, { see: o.see }) }
 function inter(id, box, name, on, cond) { if (LAYOUT.on && !LAYOUT.raw) box = LBOX(box); const it = { id, box, name, on, cond }; H3.inter.push(it); return it }
 // a panel door: raised panels on both faces, brass knobs. Built with the hinge at the origin, the panel running along +x.
-function doorMesh(mb, t = 'panel') {
+// (one plain paint on the slab and the panels: the old texture had panels painted on as well, which doubled them)
+function doorMesh(mb, t = 'doorpaint') {
   const w = DOORW, h = DOORH - .02, th = .04, kx = w / .9, ky = h / 2.08; mb.box(t, 0, 0, -th / 2, w, h, th / 2, { us: .9 });
-  for (const s of [-1, 1]) { for (const [x0, y0, x1, y1] of [[.1, .15, .42, .95], [.48, .15, .8, .95], [.1, 1.08, .42, 1.95], [.48, 1.08, .8, 1.95]]) mb.box(t, x0 * kx, y0 * ky, s > 0 ? th / 2 : -th / 2 - .012, x1 * kx, y1 * ky, s > 0 ? th / 2 + .012 : -th / 2, { bev: .008, us: .9 });
+  for (const s of [-1, 1]) { for (const [x0, y0, x1, y1] of [[.12, .14, .42, .78], [.48, .14, .78, .78], [.12, .9, .42, 1.42], [.48, .9, .78, 1.42], [.12, 1.54, .42, 1.94], [.48, 1.54, .78, 1.94]]) {
+      const zf = s > 0 ? th / 2 : -th / 2, X0 = x0 * kx, X1 = x1 * kx, Y0 = y0 * ky, Y1 = y1 * ky, m = .03, d = s * .01;
+      // a raised panel: a bevelled frame stepping out, then the flat field in the middle
+      mb.box(t, X0, Y0, Math.min(zf, zf + d * .5), X1, Y1, Math.max(zf, zf + d * .5), { us: .9, col: [.82, .82, .82, 0] }); mb.box(t, X0 + m, Y0 + m, Math.min(zf, zf + d), X1 - m, Y1 - m, Math.max(zf, zf + d), { bev: .006, us: .9 }) }
     mb.with(M4.mul(M4.tr(w - .1 * kx, 1.02, s * th / 2), M4.rx(s * HP)), m => { m.cyl('brass', 0, 0, 0, .028, .008, { seg: 10 }); m.lathe('brass', [[.008, 0], [.01, .04], [.026, .05], [.026, .065], [.0, .07]], { seg: 10 }) }) }
 }
 function door(id, hx, hz, fl, along, swing, o = {}) {
@@ -315,11 +320,10 @@ function buildHouse() {
     mb.at(13.2, 0, 12.0, 0, m => MOD.table(m, 1.4, .9, .76, 'oak')); hs(12.5, 0, 11.55, 13.9, .78, 12.45);
     for (const [x, z, r] of [[12.85, 11.3, 0], [13.55, 11.3, 0], [12.85, 12.7, PI], [13.55, 12.7, PI]]) { mb.at(x, 0, z, r, m => MOD.chair(m)); hs(x - .2, 0, z - .2, x + .2, .5, z + .2) }
     mb.at(13.2, 0, 12.0, 0, m => MOD.ceilingLamp(m, 2.8));
-    // Hitori's room: a white dresser by the door, a wooden chest of drawers with a lamp by the window wall, a beanbag
+    // Hitori's room: a white dresser by the door, a wooden chest of drawers with a lamp by the window wall
     mb.at(11.66, 3, 7.4, HP, m => { m.box('vanity', -.5, 0, -.24, .5, .9, .24, { fit: 1 }); m.box('trimw', -.52, .9, -.26, .52, .93, .26) }); hs(11.4, 3, 6.88, 11.92, 3.95, 7.92);
     mb.at(11.75, 3.93, 7.15, 0, m => { m.lathe('porcelain', [[.04, 0], [.06, .1], [.03, .2]], { seg: 10 }); m.box('gamecase', .1, 0, .1, .22, .02, .3, { fit: 1 }) });
     mb.at(16.12, 3, 7.6, -HP, m => MOD.dresser(m, 1.1, .9)); hs(15.86, 3, 7.05, 16.4, 3.92, 8.15); mb.at(16.12, 3.9, 7.95, 0, m => MOD.tableLamp(m, .42));
-    mb.at(14.3, 3, 12.6, 0, m => m.sphere('cushion', 0, .25, 0, .42, .28, .42, { seg: 14, rings: 8 })); hs(13.9, 3, 12.2, 14.7, 3.5, 13.0);
     // the landing upstairs: a long bench under a painting, a plant in the corner
     mb.at(8.5, 3, .35, 0, m => { m.box('walnut', -.8, .4, -.2, .8, .46, .2, { bev: .01 }); for (const x of [-.72, .72]) m.box('walnut', x - .04, 0, -.16, x + .04, .4, .16) }); hs(7.7, 3, .1, 9.3, 3.46, .6);
     mFrame(mb, 'painting', 's', 8.5, 4.6, .07, 1.4, .9, 'walnut'); mb.at(11.0, 3, .5, 0, m => MOD.plant(m, false)); hs(10.8, 3, .3, 11.2, 3.9, .7);
@@ -349,6 +353,9 @@ function buildHouse() {
   LAYOUT.stretch = 0;
   const glass = new MB();   // the mirrors: their glass is a separate object so it can show a reflection
   const mirror = (face, cx, cy, cz, w, h) => { mFrame(mb, null, face, cx, cy, cz, w, h, 'walnut'); const n = { n: [0, 0, -1], s: [0, 0, 1], e: [1, 0, 0], w: [-1, 0, 0] }[face]; const m = new MB(); m.decal('mirror', cx + n[0] * .006, cy, cz + n[2] * .006, w, h, face); const o = m.build(); o.mirror = 'mirror'; H3.mirrors.push({ obj: o, p: L3P([cx + n[0] * .01, cy, cz + n[2] * .01]), n }) };
+  // a mirror placed straight on the new plan
+  const mirrorN = (face, cx, cy, cz, w, h) => { mFrame(mb, null, face, cx, cy, cz, w, h, 'walnut'); const n = { n: [0, 0, -1], s: [0, 0, 1], e: [1, 0, 0], w: [-1, 0, 0] }[face]; const m = new MB(); m.decal('mirror', cx + n[0] * .006, cy, cz + n[2] * .006, w, h, face); const o = m.build(); o.mirror = 'mirror'; H3.mirrors.push({ obj: o, p: [cx + n[0] * .01, cy, cz + n[2] * .01], n }) };
+  lRaw(() => bathsN(mb, mirrorN));   // both bathrooms (js/p2_baths.js)
   // ================================================================ ROOMS, ground floor
   // the hall: front door, shoe rack, a coat stand, a mirror, a light switch
   mb.at(7.9, 0, 9.75, 0, m => MOD.shoeRack(m)); hs(7.45, 0, 9.58, 8.35, .45, 9.94);
@@ -374,9 +381,9 @@ function buildHouse() {
   mb.box('walnut', 7.1, 1.65, .06, 8.3, 1.72, .09); for (let i = 0; i < 3; i++) mb.at(7.35 + i * .4, 0, .06, PI + (i - 1) * .1, m => m.lathe(['sofa', 'curtain', 'lacquer'][i], [[.03, 1.68], [.13, 1.55], [.15, 1.2], [.14, 1.0]], { seg: 10, sz: .5, cz: -.08 }));
   mWindow(mb, 's', 5.2, 1.6, .06, 1, 1, {});
   // the kitchen: counters and cabinets along the east wall (sink under the window), the fridge, a clock stuck at six, the table by the south wall
-  mb.at(11.63, 0, 5.81, HP, m => { MOD.counter(m, 4.38, { gap: [1.2, 1.7] }); MOD.stove(m, 1.457); MOD.sink(m, -.29) }); hs(11.3, 0, 3.6, 11.94, .92, 8.02);
+  mb.at(11.63, 0, 5.81, HP, m => { MOD.counter(m, 4.38, { gap: [1.2, 1.7], sink: -.29 }); MOD.stove(m, 1.457) }); hs(11.3, 0, 3.6, 11.94, .92, 8.02);
   mb.at(11.77, 1.5, 4.56, HP, m => MOD.upperCabinets(m, 1.88)); mb.at(11.77, 1.5, 7.35, HP, m => MOD.upperCabinets(m, 1.3));
-  mWindow(mb, 'w', 11.94, 1.75, 6.1, .9, .7, {}); lStretch(() => mb.box('tile', 11.93, .92, 3.62, 11.94, 1.5, 8.0, { skip: 'e', us: 1 }));
+  mWindow(mb, 'w', 11.94, 1.75, 6.1, .9, .7, {}); mb.box('tile', 11.93, .92, 3.62, 11.94, 1.5, 8.0, { skip: 'e', us: 1 });   // the splashback moves with the counter
   inter('ksink', [11.3, .8, 5.7, 12, 1.3, 6.5], 'Sink', () => P2S.look('ksink'));
   { const base = M4.mul(M4.tr(...L3P([11.58, 0, 8.75])), M4.ry(HP)); lRaw(() => { mb.with(base, m => MOD.fridgeBody(m)); mb.with(base, m => MOD.fridgeFood(m)) }); hs(11.2, 0, 8.36, 11.94, 1.9, 9.14);
     const main = lRaw(() => single(m => MOD.fridgeDoor(m, .78, 1.42))), top = lRaw(() => single(m => MOD.fridgeDoor(m, .78, .4))), light = { p: L3P([11.4, 1.2, 8.75]), c: [.7, .75, .8], r: 2.2, off: true };
@@ -394,10 +401,6 @@ function buildHouse() {
   mb.box('cabdoor', 9.0, 0, 3.52, 9.66, 2.25, 4.15, { us: 1 }); hs(9.0, 0, 3.5, 9.66, 2.25, 4.15);
   for (const [y0, y1] of [[.75, 1.32], [1.36, 1.93]]) { mb.box('ovenblack', 9.06, y0, 4.15, 9.6, y1, 4.17, { fit: 1 }); mb.box('chrome', 9.1, y1 - .08, 4.17, 9.56, y1 - .06, 4.19) }
   mb.decal('wallswitch', 8.53, 1.2, 4.45, .08, .12, 'w');
-  // the little bathroom downstairs
-  mb.at(11.4, 0, .37, PI, m => MOD.toilet(m)); hs(11.2, 0, .06, 11.6, .8, .75); mb.at(9.5, 0, .28, PI, m => MOD.pedestalSink(m)); hs(9.22, 0, .06, 9.78, .85, .5);
-  mirror('s', 9.5, 1.55, .075, .5, .65); lStretch(() => mb.box('tile', 8.66, 0, .06, 11.94, 1.2, .075, { skip: 'n', us: 1 }));
-  inter('bathmirror0', [9.2, 1.1, 0, 9.8, 1.9, .3], 'Mirror', () => P2S.look('mirror'));
   // ================================================================ ROOMS, upstairs
   const Y = 3;
   // HITORI'S ROOM (x 8.6-12, z 5-10): the room from the title screen
@@ -439,17 +442,6 @@ function buildHouse() {
   mb.at(11.68, Y, 3.8, -HP, m => { m.box('walnut', -.8, 0, -.18, .8, 1.8, .18, { skip: 'n' }); for (const y of [.4, .9, 1.4]) m.box('walnut', -.78, y, -.16, .78, y + .02, .17) }); hs(11.5, Y, 3, 11.94, Y + 1.8, 4.6);
   inter('sisbox', [9.75, Y, 3.95, 10.45, Y + .6, 4.6], 'Box', () => P2S.look('sisbox')); inter('sisroom', [10.2, Y, .2, 11.8, Y + .4, 2.2], 'Mattress', () => P2S.look('sisroom'));
   mWindow(mb, 'w', 11.94, Y + 1.5, 2.2, 1.1, 1.2, {});
-  // the bathroom upstairs (x 0-4, z 0-4.5)
-  mb.at(1.0, Y, .48, 0, m => MOD.bathtub(m)); hs(.15, Y, .1, 1.85, Y + .6, .85); mb.at(3.45, Y, .37, PI, m => MOD.toilet(m)); hs(3.25, Y, .06, 3.65, Y + .8, .75);
-  mb.box('tile', .1, Y, .9, 1.9, Y + .6, 1.0, { us: 1 }); mb.box('tile', 1.85, Y, .06, 1.95, Y + .6, 1.0, { us: 1 }); hs(.1, Y, .85, 1.95, Y + .6, 1.0);
-  lStretch(() => mb.box('tile', .06, Y, .06, 1.95, Y + 2.0, .075, { skip: 'n', us: 1 })); mb.box('tile', .06, Y, .06, .075, Y + 2.0, .98, { skip: 'w', us: 1 });
-  mb.at(2.45, Y, .3, PI, m => { m.box('vanity', -.42, .08, -.24, .42, .84, .24, { skip: 's', fit: 1 }); m.box('dark', -.4, 0, -.22, .4, .08, .22); m.box('marble', -.45, .84, -.27, .45, .88, .27, { bev: .008 }); m.box('porcelain', -.2, .86, -.16, .2, .885, .14, { skip: 'nsewb' }); m.tube('chrome', [[0, .88, .2], [0, 1.02, .2], [0, 1.04, .1]], [.012, .012, .01], { seg: 6 }) }); hs(2.0, Y, .06, 2.9, Y + .88, .57);
-  mirror('s', 2.45, Y + 1.6, .075, .6, .75); lStretch(() => mb.box('tilef', .06, Y, .06, 3.94, Y + .004, 4.44, { skip: 'nsewb', us: .7 })); mb.box('rug2', 2.1, Y + .005, 1.2, 3.1, Y + .012, 1.8, { skip: 'nsewb', fit: 1 });
-  for (const x of [1.95, 2.95]) mb.at(x, Y + 1.7, .1, 0, m => { m.box('brass', -.03, -.06, -.03, .03, .06, .0); m.tube('brass', [[0, 0, .0], [0, .02, .08], [0, .1, .1]], [.008, .008, .008], { seg: 5 }); m.lathe('lamp', [[.06, .1], [.04, .2]], { cz: .1, seg: 10 }) });
-  mb.at(.4, Y, 4.12, 0, m => MOD.plant(m, false)); hs(.2, Y, 3.92, .6, Y + .9, 4.32);
-  mb.at(3.62, Y, 2.65, -HP, m => { m.lathe('porcelain', [[.12, 0], [.16, .3], [.19, .38], [.18, .42]], { seg: 16, sz: 1.4 }); m.tube('chrome', [[0, .42, -.16], [0, .5, -.14]], [.01, .008], { seg: 6 }) }); hs(3.4, Y, 2.4, 3.94, Y + .45, 2.9);
-  mb.box('trimw', 2.95, Y + 1.05, .06, 3.95, Y + 2.25, .08); for (const yy of [1.2, 1.55, 1.9]) { mb.box('oak', 3.0, Y + yy, .08, 3.9, Y + yy + .025, .3); const R2b = rng(yy * 100 | 0); for (let i = 0; i < 9; i++) mb.lathe('bottle', [[.025, 0], [.025, .1 + R2b() * .06], [.01, .15 + R2b() * .05]], { cx: 3.06 + i * .095, cz: .19, seg: 8, yf: () => Y + yy + .025, col: [[.3, .7, .6, .2], [.8, .4, .6, .2], [.3, .5, .9, .2], [.9, .8, .3, .2]][i % 4] }) }
-  mb.at(.45, Y, 3.0, HP, m => MOD.chair(m, 'oak', 'beige')); hs(.2, Y, 2.75, .7, Y + .5, 3.25); inter('mirror', [2.05, Y + 1.1, 0, 2.65, Y + 1.9, .3], 'Mirror', () => P2S.look('mirror'));
   // the parents' room (x 0-4, z 4.5-10): a made bed and a dresser under dust sheets
   lStretch(() => { for (const [x0, z0, x1, z1] of [[.06, 4.62, .075, 9.94], [3.925, 4.62, 3.94, 9.94], [.06, 4.62, 3.94, 4.635], [.06, 9.925, 3.94, 9.94]]) mb.box('wallp', x0, Y, z0, x1, Y + 2.8, z1, { us: 1.4 }) });
   mb.at(1.09, Y, 7.4, -HP, m => MOD.bed(m, 1.6, 2.05, 'stripes', 'trimw')); hs(.06, Y, 6.6, 2.15, Y + .6, 8.2);
@@ -471,7 +463,7 @@ function buildHouse() {
   door('hitori', 8.6, 6, 1, 'z', -1, { name: 'Door', locked: () => P2S.hitoriDoorLocked() }); door('sister', 8.6, 2, 1, 'z', -1, { name: 'Door', locked: () => P2S.sisterLocked() });
   door('ubath', 4, 1.5, 1, 'z', 1, { name: 'Bathroom' }); door('parents', 4, 9.05, 1, 'z', 1, { name: 'Door' });
   for (const d of H3.doors) { d.obj = d.mb.build() }
-  H3.world = mb.build(); H3.ext = ext.build(); H3.ext.vis = false;
+  H3.settled = lSettle(mb); H3.world = mb.build(); H3.ext = ext.build(); H3.ext.vis = false;
   for (const k in H3.extra) if (H3.extra[k] instanceof MB) H3.extra[k] = H3.extra[k].build();
   LAYOUT.on = false;
   H3.solids.push({ x0: -1, y0: -5, z0: -1, x1: 0, y1: 10, z1: HOUSE_D + 1 }, { x0: HOUSE_W, y0: -5, z0: -1, x1: HOUSE_W + 1, y1: 10, z1: HOUSE_D + 1 }, { x0: -1, y0: -5, z0: -1, x1: HOUSE_W + 1, y1: 10, z1: 0 }, { x0: -1, y0: -5, z0: HOUSE_D, x1: HOUSE_W + 1, y1: 10, z1: HOUSE_D + 1 });

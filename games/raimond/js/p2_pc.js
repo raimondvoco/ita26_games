@@ -62,6 +62,7 @@ function ico(k, x, y, s = 1) {
     case 'snip': sq(1, 1, 14, 14, '#e83a6a', 3); G.strokeStyle = '#fff'; G.lineWidth = 1.3; G.strokeRect(4, 4, 8, 8); break;
     case 'pc': sq(1, 2, 14, 9, '#4cc2ff', 1.5); sq(2, 3, 12, 7, '#0f6cbd', 1); sq(5, 12, 6, 2, '#999', .5); break;
     case 'bin': sq(3, 4, 10, 11, 'rgba(200,220,240,.75)', 1.5); sq(2, 2, 12, 2, '#d8e4f0', .5); for (let i = 0; i < 3; i++) R2(5 + i * 2.5, 6, 1, 7, 'rgba(80,100,130,.5)'); break;
+    case 'save': sq(1, 1, 14, 14, '#2a5aa8', 1.5); sq(4, 1, 8, 5, '#d8dce4', .5); R2(9, 2, 2, 3, '#2a5aa8'); sq(3, 8.5, 10, 6, '#f4f4f4', .8); for (let i = 0; i < 2; i++) R2(5, 10.5 + i * 2, 6, .8, '#99a'); break;
     case 'txt': sq(3, 1, 10, 14, '#f4f4f4', 1); for (let i = 0; i < 4; i++) R2(5, 4 + i * 2.6, 6, 1, '#888'); break;
     case 'jpg': sq(3, 1, 10, 14, '#f4f4f4', 1); sq(4, 5, 8, 6, '#4cc2ff', .5); R2(4, 9, 8, 2, '#36a46a'); break;
     case 'audio': sq(3, 1, 10, 14, '#f4f4f4', 1); G.fillStyle = '#e8753a'; G.beginPath(); G.moveTo(6, 5); G.lineTo(10, 7.5); G.lineTo(6, 10); G.fill(); break;
@@ -84,7 +85,7 @@ const APPS = {
   settings: { n: 'Settings', i: 'settings', w: 470, h: 280 }, calc: { n: 'Calculator', i: 'calc', w: 180, h: 260 }, paint: { n: 'Paint', i: 'paint', w: 420, h: 270 }, clock: { n: 'Clock', i: 'clock', w: 360, h: 230 },
   calendar: { n: 'Calendar', i: 'calendar', w: 380, h: 260 }, mail: { n: 'Outlook', i: 'mail', w: 420, h: 250 }, store: { n: 'Microsoft Store', i: 'store', w: 420, h: 250 }, word: { n: 'Word', i: 'word', w: 360, h: 220 },
   excel: { n: 'Excel', i: 'excel', w: 360, h: 220 }, ppt: { n: 'PowerPoint', i: 'ppt', w: 360, h: 220 }, media: { n: 'Media Player', i: 'media', w: 400, h: 240 }, xbox: { n: 'Xbox', i: 'xbox', w: 400, h: 240 },
-  terminal: { n: 'Terminal', i: 'terminal', w: 380, h: 200 }, snip: { n: 'Snipping Tool', i: 'snip', w: 300, h: 120 },
+  terminal: { n: 'Terminal', i: 'terminal', w: 380, h: 200 }, savegame: { n: 'Save game', i: 'save', w: 280, h: 180 }, snip: { n: 'Snipping Tool', i: 'snip', w: 300, h: 120 },
 };
 const PINNED11 = ['edge', 'word', 'excel', 'ppt', 'mail', 'calendar', 'store', 'photos', 'settings', 'calc', 'clock', 'notepad', 'paint', 'explorer', 'media', 'xbox', 'snip', 'terminal'];
 const HISTORY = ['my sister left without saying goodbye', 'how to find someone who doesnt want to be found', 'number says no longer in service what does that mean', 'is it my fault she left', 'how long can you sleep without waking up', 'hearing footsteps when nobody else is home', 'what happens if you stop taking your meds', 'why do my friends whisper about me', 'how to say sorry to someone who wont pick up'];
@@ -176,7 +177,7 @@ function drawLock(u) {
 function drawDesk(u, B) {
   G.drawImage(wall11(), 0, 0);
   // desktop icons (double-click, or click twice)
-  [['This PC', 'pc', () => openApp(u, 'explorer', { dir: 'This PC' })], ['Recycle Bin', 'bin', () => openApp(u, 'explorer', { dir: 'Recycle Bin' })], ['Microsoft Edge', 'edge', () => openApp(u, 'edge')], ['notes.txt', 'txt', () => openFile(u, 'notes.txt')], ['us.jpg', 'jpg', () => openFile(u, 'us.jpg')]].forEach(([n, ic, f], i) => {
+  [['This PC', 'pc', () => openApp(u, 'explorer', { dir: 'This PC' })], ['Recycle Bin', 'bin', () => openApp(u, 'explorer', { dir: 'Recycle Bin' })], ['Microsoft Edge', 'edge', () => openApp(u, 'edge')], ['Save game', 'save', () => openApp(u, 'savegame')], ['notes.txt', 'txt', () => openFile(u, 'notes.txt')], ['us.jpg', 'jpg', () => openFile(u, 'us.jpg')]].forEach(([n, ic, f], i) => {
     const x = 6, y = 6 + i * 50, hv = IN(u, x, y, 54, 46); if (u.sel == n || hv) RR(x, y, 54, 46, 3, u.sel == n ? 'rgba(120,170,255,.35)' : 'rgba(255,255,255,.12)'); ico(ic, x + 13, y + 3, 1.8); T2(fit2(n, 52, 8), x + 27, y + 33, '#fff', 8, 400, 'center');
     B([x, y, 54, 46], () => { if (u.sel == n && u.t - (u.selT || 0) < 40) { u.sel = null; f() } else { u.sel = n; u.selT = u.t } }) });
   // windows, back to front
@@ -240,6 +241,15 @@ function offline(u, w, x, y, ww, hh, B, title, sub) { R2(x, y, ww, hh, '#1c1c20'
   const r = [x + ww / 2 - 34, y + hh / 2 + 24, 68, 18]; RR(...r, 4, IN(u, ...r) ? '#2a8ae0' : '#0f6cbd'); T2('Try again', x + ww / 2, y + hh / 2 + 28, '#fff', 8.5, 600, 'center'); B(r, () => { w.st.retry = u.t; beep(300, .1) }); if (w.st.retry && u.t - w.st.retry < 60) T2('Still no connection.', x + ww / 2, y + hh / 2 + 48, '#ffb8b8', 8, 400, 'center') }
 const NOTES = ['things to remember:', '', '- eat something', '- take meds (!!)', '- call her back', '- call her back', '- CALL HER BACK', '', 'she said she needed space. ok. i can give her space.', 'i can wait.', '', 'they keep whispering when i call. i can hear them', 'whispering. caroline says they arent. caroline lies'];
 const APPDRAW = {
+  // saving part two: the computer is where you save, into the same three slots as part one (they read "Hitori's house").
+  // It keeps the day you're on; loading one starts that day again.
+  savegame(u, w, x, y, ww, hh, B) { const st = w.st;
+    R2(x, y, ww, hh, '#202024'); ico('save', x + 12, y + 10, 1.4); T2('Save game', x + 40, y + 10, '#fff', 11, 600); T2('Part Two  ·  ' + p2DayName(P2.stage) + '  ·  pick a slot', x + 40, y + 25, '#aaa', 8);
+    if (st.done > 0) st.done--;
+    [0, 1, 2].forEach(i => { const by = y + 44 + i * 26, hv = IN(u, x + 12, by, ww - 24, 22), on = st.done > 0 && st.slot == i;
+      RR(x + 12, by, ww - 24, 22, 4, on ? '#2a7ad8' : hv ? '#3a3a42' : '#2c2c32', '#45454d'); T2(summ(i), x + 20, by + 6, '#eee', 8.5); if (on) T2('Saved', x + ww - 20, by + 6, '#fff', 8.5, 600, 'right');
+      B([x + 12, by, ww - 24, 22], () => { p2Save(i); st.done = 90; st.slot = i; beep(660, .05); beep(880, .08) }) });
+    T2('Load it from Continue on the title screen. It starts this day again.', x + 12, y + hh - 16, '#888', 7.5) },
   generic(u, w, x, y, ww, hh, B) { offline(u, w, x, y, ww, hh, B, 'Can\'t connect', 'Check your internet connection and try again.') },
   notepad(u, w, x, y, ww, hh) { R2(x, y, ww, hh, '#1f1f1f'); R2(x, y, ww, 16, '#2a2a2e'); ['File', 'Edit', 'View'].forEach((n, i) => T2(n, x + 8 + i * 30, y + 3, '#ddd', 8.5)); RR(x + 6, y + 17, 90, 15, [4, 4, 0, 0], '#2c2c30'); T2('notes.txt', x + 14, y + 20, '#ddd', 8);
     R2(x, y + 32, ww, hh - 46, '#272727'); NOTES.forEach((l, i) => T2(l, x + 8, y + 37 + i * 11, i >= 11 ? '#e8c8c8' : '#e8e8e8', 8.5, 400)); R2(x, y + hh - 14, ww, 14, '#2a2a2e'); T2('Ln 13, Col 49   |   100%   |   UTF-8', x + 8, y + hh - 11, '#999', 7.5) },
